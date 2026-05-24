@@ -54,6 +54,9 @@ const facetGroups: Array<{
   { key: "work", facetsKey: "works", visual: "list" }
 ];
 
+const topFacetGroups = facetGroups.filter(({ key }) => key === "author" || key === "work");
+const lowerFacetGroups = facetGroups.filter(({ key }) => key === "genre" || key === "period" || key === "language" || key === "textType");
+
 function maxCount(options: FacetOption[]) {
   return Math.max(1, ...options.map((option) => option.count ?? option.work_count ?? option.passage_count ?? 0));
 }
@@ -127,6 +130,47 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
 
   function clearDimension(key: keyof SearchFilters) {
     setDraft((current) => clearFilterKey(current, key));
+  }
+
+  function renderFacetGroup(key: keyof SearchFilters, facetsKey: keyof MetadataFacets, visual: string) {
+    return (
+      <section className="border border-neutral-300 bg-[var(--surface-muted)] p-3 shadow-sm" key={key}>
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-700">{t(`filters.fields.${key}`)}</h3>
+            <p className="mt-1 text-xs text-neutral-500">
+              {key === "author"
+                ? t("filterDashboard.authorHelp")
+                : key === "work"
+                  ? t("filterDashboard.workHelp")
+                  : t("filterDashboard.dimensionHelp")}
+            </p>
+          </div>
+          {valuesForFilter(draft[key]).length ? (
+            <button className="text-xs font-semibold text-[var(--accent)] hover:underline" onClick={() => clearDimension(key)} type="button">
+              {t("filterDashboard.clearDimension")}
+            </button>
+          ) : null}
+        </div>
+        {key === "author" ? (
+          <input
+            className="mb-3 w-full border border-[var(--line)] bg-white px-2 py-2 text-sm"
+            onChange={(event) => setAuthorQuery(event.target.value)}
+            placeholder={t("filterDashboard.authorSearch")}
+            value={authorQuery}
+          />
+        ) : null}
+        {key === "work" ? (
+          <input
+            className="mb-3 w-full border border-[var(--line)] bg-white px-2 py-2 text-sm"
+            onChange={(event) => setWorkQuery(event.target.value)}
+            placeholder={t("filterDashboard.workSearch")}
+            value={workQuery}
+          />
+        ) : null}
+        {renderOptions(key, dashboardFacets[facetsKey], visual)}
+      </section>
+    );
   }
 
   function renderOptions(key: keyof SearchFilters, options: FacetOption[], visual: string) {
@@ -206,13 +250,34 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
               >
                 {t("filterDashboard.apply")}
               </button>
+              <span
+                aria-label={t("filterDashboard.tooltip")}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--line)] bg-white text-xs font-semibold text-neutral-500"
+                role="img"
+                title={t("filterDashboard.tooltip")}
+              >
+                ?
+              </span>
             </div>
           </div>
         </header>
 
         <div className="min-h-0 flex-1 overflow-auto">
           {view === "filters" ? (
-            <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-4 p-4">
+              <section className="grid gap-3 lg:grid-cols-3">
+                {[
+                  { count: dashboardSummary.authors_count, label: t("filterDashboard.authors") },
+                  { count: dashboardSummary.works_count, label: t("filterDashboard.works") },
+                  { count: dashboardSummary.passages_count, label: t("resultsPanel.passages") }
+                ].map((item) => (
+                  <div className="border border-[var(--line)] bg-[var(--surface-muted)] p-4" key={item.label}>
+                    <div className="text-2xl font-semibold leading-none text-neutral-900">{numberFormatter.format(item.count)}</div>
+                    <div className="mt-2 text-xs font-semibold uppercase tracking-wide text-neutral-600">{item.label}</div>
+                  </div>
+                ))}
+              </section>
+
               <main className="space-y-4">
                 <section className="border border-[var(--line)] p-3">
                   <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -234,59 +299,7 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
                     </div>
                   </div>
                   {busy ? <div className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">{t("filterDashboard.loading")}</div> : null}
-                </section>
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {facetGroups.map(({ key, facetsKey, visual }) => (
-                    <section className="border border-[var(--line)] bg-white p-3" key={key}>
-                      <div className="mb-3 flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-700">{t(`filters.fields.${key}`)}</h3>
-                          <p className="mt-1 text-xs text-neutral-500">
-                            {key === "author"
-                              ? t("filterDashboard.authorHelp")
-                              : key === "work"
-                                ? t("filterDashboard.workHelp")
-                                : t("filterDashboard.dimensionHelp")}
-                          </p>
-                        </div>
-                        {valuesForFilter(draft[key]).length ? (
-                          <button className="text-xs font-semibold text-[var(--accent)] hover:underline" onClick={() => clearDimension(key)} type="button">
-                            {t("filterDashboard.clearDimension")}
-                          </button>
-                        ) : null}
-                      </div>
-                      {key === "author" ? (
-                        <input
-                          className="mb-3 w-full border border-[var(--line)] px-2 py-2 text-sm"
-                          onChange={(event) => setAuthorQuery(event.target.value)}
-                          placeholder={t("filterDashboard.authorSearch")}
-                          value={authorQuery}
-                        />
-                      ) : null}
-                      {key === "work" ? (
-                        <input
-                          className="mb-3 w-full border border-[var(--line)] px-2 py-2 text-sm"
-                          onChange={(event) => setWorkQuery(event.target.value)}
-                          placeholder={t("filterDashboard.workSearch")}
-                          value={workQuery}
-                        />
-                      ) : null}
-                      {renderOptions(key, dashboardFacets[facetsKey], visual)}
-                    </section>
-                  ))}
-                </div>
-              </main>
-
-              <aside className="space-y-4">
-                <section className="border border-[var(--line)] bg-[var(--surface-muted)] p-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-700">{t("filterDashboard.summary")}</h3>
-                  <div className="mt-2 text-sm text-neutral-600">
-                    {numberFormatter.format(dashboardSummary.authors_count)} {t("filterDashboard.authors")} ·{" "}
-                    {numberFormatter.format(dashboardSummary.works_count)} {t("filterDashboard.works")} ·{" "}
-                    {numberFormatter.format(dashboardSummary.passages_count)} {t("resultsPanel.passages")}
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-[var(--line)] pt-3">
                     {selectedItems.map((item) => (
                       <button
                         className="max-w-full truncate border border-[var(--line)] bg-white px-2 py-1 text-xs text-neutral-700 hover:border-[var(--accent)]"
@@ -300,10 +313,16 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
                     {!selectedItems.length ? <div className="text-sm text-neutral-500">{t("filters.noneSelected")}</div> : null}
                   </div>
                 </section>
-                <section className="border border-[var(--line)] p-3 text-xs leading-5 text-neutral-600">
-                  {t("filterDashboard.tooltip")}
-                </section>
-              </aside>
+
+                <div className="space-y-4">
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {topFacetGroups.map(({ key, facetsKey, visual }) => renderFacetGroup(key, facetsKey, visual))}
+                  </div>
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {lowerFacetGroups.map(({ key, facetsKey, visual }) => renderFacetGroup(key, facetsKey, visual))}
+                  </div>
+                </div>
+              </main>
             </div>
           ) : (
             <div className="grid h-full min-h-[680px] gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_320px]">
