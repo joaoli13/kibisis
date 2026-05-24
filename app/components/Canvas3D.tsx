@@ -515,9 +515,9 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
   }, [pendingShowLabels, showLabels]);
 
   return (
-    <main className={`flex min-h-0 flex-col ${compact ? "h-full" : ""}`}>
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] bg-white px-4 py-2">
-        <div className="flex min-w-0 items-center gap-2">
+    <main className={`flex min-h-[460px] flex-col lg:min-h-0 ${compact ? "lg:h-full" : ""}`}>
+      <div className="flex flex-col items-stretch gap-2 border-b border-[var(--line)] bg-white px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           {(["author", "work", "passage"] as const).map((level) => (
             <button
               aria-pressed={granularity === level}
@@ -533,7 +533,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
               {t(`levels.${level}`)}
             </button>
           ))}
-          <div className="ml-2 flex min-w-0 items-center gap-1 text-xs text-neutral-600">
+          <div className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-neutral-600 sm:ml-2">
             <button className="hover:text-[var(--accent)]" onClick={() => chooseLevel("author")} type="button">
               {t("allAuthors")}
             </button>
@@ -554,7 +554,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
           </div>
         </div>
         <select
-          className="border border-[var(--line)] px-2 py-1 text-sm"
+          className="w-full border border-[var(--line)] px-2 py-1 text-sm sm:w-auto"
           value={colorBy}
           onChange={(event) => setColorBy(event.target.value as typeof colorBy)}
         >
@@ -564,7 +564,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
           <option value="period">{t("colorBy.period")}</option>
         </select>
       </div>
-      <div className="relative min-h-0 flex-1">
+      <div className="relative min-h-[360px] flex-1 lg:min-h-0">
         <Plot
           data={plotData}
           layout={layout}
@@ -597,7 +597,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
           </aside>
         ) : null}
         {activeMapNode ? (
-          <aside className="absolute right-4 top-4 z-10 w-[min(380px,calc(100%-2rem))] border border-[var(--line)] bg-white p-4 shadow-xl">
+          <aside className="absolute left-4 right-4 top-4 z-10 border border-[var(--line)] bg-white p-4 shadow-xl sm:left-auto sm:w-[min(380px,calc(100%-2rem))]">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-xs font-semibold uppercase tracking-wide text-neutral-600">{t("passageMetadata")}</div>
@@ -614,7 +614,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
                 {t("close")}
               </button>
             </div>
-            <dl className="grid grid-cols-[104px_minmax(0,1fr)] gap-x-3 gap-y-2 text-xs">
+            <dl className="grid gap-x-3 gap-y-2 text-xs sm:grid-cols-[104px_minmax(0,1fr)]">
               {metadataRows.map(([label, value]) => (
                 <div className="contents" key={label}>
                   <dt className="font-semibold uppercase tracking-wide text-neutral-500">{label}</dt>
@@ -700,7 +700,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
         </section>
         <section>
           <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-700">{t("layers")}</div>
-          <label className="flex items-center justify-between gap-3 text-sm text-neutral-800">
+          <label className="flex flex-wrap items-center justify-between gap-3 text-sm text-neutral-800">
             {t("showLabels")}
             <span className="flex items-center gap-2">
               {labelsBusy ? (

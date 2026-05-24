@@ -182,8 +182,8 @@ export function SearchPanel() {
   }
 
   return (
-    <aside className="h-full overflow-auto border-r border-[var(--line)] bg-[var(--panel)] p-4">
-      <div className="space-y-3">
+    <aside className="overflow-visible border-b border-[var(--line)] bg-[var(--panel)] p-4 lg:h-full lg:overflow-auto lg:border-b-0 lg:border-r">
+      <div className="grid gap-3 md:grid-cols-2 lg:block lg:space-y-3">
         <section className="rounded border border-[var(--line)] bg-white p-3">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-700">{t("filters.selected")}</h2>

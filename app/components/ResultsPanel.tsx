@@ -411,9 +411,9 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
 
   if (variant === "answer") {
     return (
-      <section className="h-full min-h-0 overflow-auto bg-white">
+      <section className="min-h-0 overflow-visible bg-white lg:h-full lg:overflow-auto">
         <div className="border-b border-[var(--line)] bg-[var(--surface-muted)] p-5">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <div className="text-xs font-semibold uppercase tracking-wide text-neutral-600">{t("answerWorkspace")}</div>
               <h2 className="mt-1 text-xl font-semibold">{t("generatedResponse")}</h2>
@@ -487,8 +487,8 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
         </div>
 
         {detailExpanded ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-6">
-            <div className="max-h-[86vh] w-full max-w-3xl overflow-auto rounded border border-[var(--line)] bg-white p-5 shadow-xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-3 sm:p-6">
+            <div className="max-h-[86vh] w-full max-w-3xl overflow-auto rounded border border-[var(--line)] bg-white p-4 shadow-xl sm:p-5">
               {selected ? (
                 <>
                   <div className="mb-4 flex items-start justify-between gap-3 border-b border-[var(--line)] pb-4">
@@ -527,7 +527,7 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
   }
 
   return (
-    <aside className="h-full overflow-auto border-l border-[var(--line)] bg-white">
+    <aside className="overflow-visible border-t border-[var(--line)] bg-white lg:h-full lg:overflow-auto lg:border-l lg:border-t-0">
       <section className="border-b border-[var(--line)] p-4">
         <div className="mb-3 space-y-3">
           <div className="flex items-start justify-between gap-3">
@@ -608,7 +608,7 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
           </section>
         ) : null}
 
-        <div className="max-h-[31rem] space-y-2 overflow-auto">
+        <div className="space-y-2 overflow-visible lg:max-h-[31rem] lg:overflow-auto">
           {results.map((result, index) => {
             const inContext = contextPassageIds.has(result.id);
             const canInclude = inContext || contextPassages.length < CONTEXT_LIMIT;
@@ -665,9 +665,9 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
       </p>
 
       {expanded ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-6">
-          <div className="max-h-[88vh] w-full max-w-6xl overflow-auto rounded border border-[var(--line)] bg-white p-5 shadow-xl">
-            <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-3 sm:p-6">
+          <div className="max-h-[88vh] w-full max-w-6xl overflow-auto rounded border border-[var(--line)] bg-white p-4 shadow-xl sm:p-5">
+            <div className="mb-4 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <h2 className="text-lg font-semibold">{t("generatedResponse")}</h2>
                 {answerScopeSummary ? (
@@ -711,15 +711,15 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
       ) : null}
 
       {detailExpanded ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-6">
-          <div className="max-h-[86vh] w-full max-w-3xl overflow-auto rounded border border-[var(--line)] bg-white p-5 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-3 sm:p-6">
+          <div className="max-h-[86vh] w-full max-w-3xl overflow-auto rounded border border-[var(--line)] bg-white p-4 shadow-xl sm:p-5">
             {selected ? (
               <>
                 <div className="mb-4 flex items-start justify-between gap-3 border-b border-[var(--line)] pb-4">
                   <div className="min-w-0">
                     <div className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">{metadataLine(selected, t("part"))}</div>
                     <h2 className="mt-1 text-lg font-semibold">{passageTitle(selected, t("workFallback"))}</h2>
-                    <dl className="mt-3 grid grid-cols-[104px_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs text-neutral-600">
+                    <dl className="mt-3 grid gap-x-3 gap-y-1 text-xs text-neutral-600 sm:grid-cols-[104px_minmax(0,1fr)]">
                       <dt className="font-semibold uppercase tracking-wide">{t("metadata.author")}</dt>
                       <dd>{selected.author ?? selected.author_id ?? "N/A"}</dd>
                       <dt className="font-semibold uppercase tracking-wide">{t("metadata.work")}</dt>

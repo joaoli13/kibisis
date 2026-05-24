@@ -24,19 +24,19 @@ export function AtlasWorkspace({ footer }: AtlasWorkspaceProps) {
 
   return (
     <div
-      className={`grid h-screen overflow-hidden ${
+      className={`grid min-h-screen grid-cols-1 overflow-x-hidden lg:h-screen lg:overflow-hidden ${
         answerMode
-          ? "grid-cols-[320px_minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)_auto]"
-          : "grid-cols-[320px_minmax(0,1fr)_380px] grid-rows-[auto_auto_minmax(0,1fr)_auto]"
+          ? "lg:grid-cols-[320px_minmax(0,1fr)] lg:grid-rows-[auto_auto_minmax(0,1fr)_auto]"
+          : "lg:grid-cols-[320px_minmax(0,1fr)_380px] lg:grid-rows-[auto_auto_minmax(0,1fr)_auto]"
       }`}
     >
       <TopBar />
       <SearchBar />
       <SearchPanel />
       {answerMode ? (
-        <main className="grid min-h-0 grid-cols-[minmax(0,1fr)_360px] overflow-hidden">
+        <main className="grid min-h-[680px] grid-cols-1 overflow-visible lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_360px] lg:overflow-hidden">
           <ResultsPanel variant="answer" />
-          <section className="min-h-0 border-l border-[var(--line)] bg-white">
+          <section className="min-h-[420px] border-t border-[var(--line)] bg-white lg:min-h-0 lg:border-l lg:border-t-0">
             <Canvas3D compact />
           </section>
         </main>

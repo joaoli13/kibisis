@@ -36,9 +36,9 @@ export function TopBar() {
   const brandPath = "/brand";
 
   return (
-    <header className="col-span-full flex min-h-16 flex-wrap items-center justify-between gap-x-5 gap-y-2 border-b border-[var(--line)] bg-white px-4 py-2">
+    <header className="col-span-full flex min-h-16 flex-wrap items-start justify-between gap-x-5 gap-y-2 border-b border-[var(--line)] bg-white px-4 py-2 sm:items-center">
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-5 gap-y-2">
-        <Link className="flex min-w-[190px] items-center gap-3" href={`/${locale}`} aria-label="kibisis home">
+        <Link className="flex min-w-[176px] items-center gap-3" href={`/${locale}`} aria-label="kibisis home">
           <Image src="/brand/kibisis-mark.svg" alt="" width={34} height={34} priority />
           <span className="flex flex-col leading-tight">
             <span className="text-lg font-semibold tracking-wide">kibisis.dev</span>
@@ -71,7 +71,7 @@ export function TopBar() {
           ))}
         </nav>
       </div>
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+      <div className="flex w-full flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wide text-neutral-600 sm:w-auto sm:justify-end">
         <a
           className="rounded border border-[#c4593b] bg-[#c4593b] px-2 py-1 text-white hover:bg-[#a94731]"
           href={supportUrl}

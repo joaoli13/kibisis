@@ -84,7 +84,7 @@ export function SearchBar() {
   return (
     <section className="col-span-full border-b border-[var(--line)] bg-[var(--surface-muted)] px-4 py-3">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
-        <form className="flex min-w-0 flex-1 items-center gap-2" onSubmit={submitSearch}>
+        <form className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center" onSubmit={submitSearch}>
           <input
             className="h-10 min-w-0 flex-1 border border-[var(--line)] bg-white px-3 text-sm"
             onChange={(event) => setQuery(event.target.value)}
@@ -92,13 +92,13 @@ export function SearchBar() {
             value={query}
           />
           <button
-            className="h-10 border border-[var(--accent)] bg-[var(--accent)] px-4 text-sm font-semibold text-white disabled:opacity-50"
+            className="h-10 w-full border border-[var(--accent)] bg-[var(--accent)] px-4 text-sm font-semibold text-white disabled:opacity-50 sm:w-auto"
             disabled={busy || !canSubmitSearch}
             type="submit"
           >
             {t("button")}
           </button>
-          <div className="w-24 text-right text-xs text-neutral-600">
+          <div className="w-full text-left text-xs text-neutral-600 sm:w-24 sm:text-right">
             {busy ? t("searching") : t("results", { count: results.length })}
           </div>
         </form>
