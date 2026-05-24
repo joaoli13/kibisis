@@ -215,15 +215,31 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
   const passageLabel = t("passages");
   const contextLabel = t("inContext");
   const corpusScopeStats = useMemo(() => {
-    if (!metadataSummary || !metadataTotalSummary) {
+    if (!metadataTotalSummary) {
+      return "";
+    }
+    const activeSearch = query.trim().length > 0;
+    const visibleSummary = activeSearch
+      ? {
+          authors_count: new Set(results.map((result) => result.author_id ?? result.author).filter(Boolean)).size,
+          works_count: new Set(results.map((result) => result.work_id ?? result.work).filter(Boolean)).size,
+          passages_count: results.length
+        }
+      : metadataSummary;
+    if (!visibleSummary) {
       return "";
     }
     return [
-      `${numberFormatter.format(metadataSummary.authors_count)}/${numberFormatter.format(metadataTotalSummary.authors_count)} ${t("authors")}`,
-      `${numberFormatter.format(metadataSummary.works_count)}/${numberFormatter.format(metadataTotalSummary.works_count)} ${t("works")}`,
-      `${numberFormatter.format(metadataSummary.passages_count)}/${numberFormatter.format(metadataTotalSummary.passages_count)} ${t("passages")}`
+      `${numberFormatter.format(visibleSummary.authors_count)}/${numberFormatter.format(metadataTotalSummary.authors_count)} ${t("authors")}`,
+      `${numberFormatter.format(visibleSummary.works_count)}/${numberFormatter.format(metadataTotalSummary.works_count)} ${t("works")}`,
+      `${numberFormatter.format(visibleSummary.passages_count)}/${numberFormatter.format(metadataTotalSummary.passages_count)} ${t("passages")}`
     ].join(" · ");
-  }, [metadataSummary, metadataTotalSummary, numberFormatter, t]);
+  }, [metadataSummary, metadataTotalSummary, numberFormatter, query, results, t]);
+  const corpusScopeStatsText = corpusScopeStats
+    ? query.trim()
+      ? t("retrievedStats", { stats: corpusScopeStats })
+      : t("filteredStats", { stats: corpusScopeStats })
+    : "";
   const answerScopeSummary = useMemo(() => {
     const parts: string[] = [];
     if (query.trim()) {
@@ -533,7 +549,7 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
             <SourceList framed={false} sources={sources} />
             <div className="space-y-1 text-xs leading-5 text-neutral-500">
               <p>{t("notice")}</p>
-              {corpusScopeStats ? <p>{corpusScopeStats}</p> : null}
+              {corpusScopeStatsText ? <p>{corpusScopeStatsText}</p> : null}
             </div>
           </aside>
         </div>
@@ -735,7 +751,7 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
 
       <div className="space-y-1 p-4 text-xs leading-5 text-neutral-500">
         <p>{t("notice")}</p>
-        {corpusScopeStats ? <p>{corpusScopeStats}</p> : null}
+        {corpusScopeStatsText ? <p>{corpusScopeStatsText}</p> : null}
       </div>
 
       {expanded ? (

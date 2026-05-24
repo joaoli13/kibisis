@@ -125,6 +125,8 @@
     "viewPassage": "View passage",
     "noResults": "No results yet.",
     "notice": "Translations aid discovery - they do not replace critical editions.",
+    "filteredStats": "Filter scope: {stats}.",
+    "retrievedStats": "Retrieved in this search (up to 20 displayed results): {stats}.",
     "generatedResponse": "Generated response",
     "response": "Response",
     "close": "Close",

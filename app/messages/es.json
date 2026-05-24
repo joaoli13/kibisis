@@ -125,6 +125,8 @@
     "viewPassage": "Ver pasaje",
     "noResults": "Aun no hay resultados.",
     "notice": "Las traducciones ayudan al descubrimiento - no sustituyen ediciones criticas.",
+    "filteredStats": "Recorte por filtros: {stats}.",
+    "retrievedStats": "Recuperados en esta busqueda (hasta 20 resultados mostrados): {stats}.",
     "generatedResponse": "Respuesta generada",
     "response": "Respuesta",
     "close": "Cerrar",
