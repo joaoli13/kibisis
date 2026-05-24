@@ -48,9 +48,40 @@ describe("metadata route dashboard facets", () => {
     expect(payload.summary).toEqual({ authors_count: 159, works_count: 1173, passages_count: 27536 });
     expect(getMetadataFacetsMock).toHaveBeenCalledWith(
       { genre: ["tragedy", "history"] },
-      { dashboard: true, scope: "corpus", facet: "authors", facetQuery: "plat", limit: 20 }
+      {
+        dashboard: true,
+        scope: "corpus",
+        facet: "authors",
+        facetQuery: "plat",
+        authorQuery: undefined,
+        workQuery: undefined,
+        limit: 20
+      }
     );
     expect(getMetadataSummaryMock).toHaveBeenCalledWith({ genre: ["tragedy", "history"] });
+  });
+
+  it("passes author and work facet queries independently", async () => {
+    const { GET } = await import("./route");
+    const request = new NextRequest(
+      "http://localhost/api/metadata?dashboard=true&authorQuery=aristotle&workQuery=ethics&author=author%3AgreekLit%3Atlg0086"
+    );
+
+    const response = await GET(request);
+
+    expect(response.status).toBe(200);
+    expect(getMetadataFacetsMock).toHaveBeenCalledWith(
+      { author: "author:greekLit:tlg0086" },
+      {
+        dashboard: true,
+        scope: "compatible",
+        facet: undefined,
+        facetQuery: undefined,
+        authorQuery: "aristotle",
+        workQuery: "ethics",
+        limit: 20
+      }
+    );
   });
 
   it("returns filtered and total summaries when requested", async () => {

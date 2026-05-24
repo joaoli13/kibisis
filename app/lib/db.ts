@@ -436,6 +436,8 @@ type MetadataFacetOptions = {
   scope?: "compatible" | "corpus";
   facet?: keyof MetadataFacets;
   facetQuery?: string;
+  authorQuery?: string;
+  workQuery?: string;
   limit?: number;
 };
 
@@ -458,6 +460,8 @@ export async function getMetadataFacets(filters: SearchFilters = {}, options: Me
   const scope = options.scope ?? "compatible";
   const topLimit = Math.min(Math.max(Math.floor(options.limit ?? 20), 1), 100);
   const facetQuery = options.facetQuery?.trim();
+  const authorQuery = options.authorQuery?.trim();
+  const workQuery = options.workQuery?.trim();
   const scoped = (key: keyof SearchFilters) => {
     const values: unknown[] = [];
     const where = ["p.license_status = 'cc_compatible'"];
@@ -471,13 +475,13 @@ export async function getMetadataFacets(filters: SearchFilters = {}, options: Me
   const periodScope = scoped("period");
   const languageScope = scoped("language");
   const textTypeScope = scoped("textType");
-  function addFacetQuery(scope: { where: string; values: unknown[] }, expression: "a.name" | "w.title") {
-    if (!facetQuery) {
+  function addFacetQuery(scope: { where: string; values: unknown[] }, expression: "a.name" | "w.title", query?: string) {
+    if (!query) {
       return scope;
     }
     return {
       where: `${scope.where} AND ${expression} ILIKE '%' || $${scope.values.length + 1} || '%'`,
-      values: [...scope.values, facetQuery]
+      values: [...scope.values, query]
     };
   }
 
@@ -509,8 +513,16 @@ export async function getMetadataFacets(filters: SearchFilters = {}, options: Me
     return !selectedFacet || selectedFacet === facet;
   }
 
-  const authorScopeForQuery = addFacetQuery(authorResultScope, "a.name");
-  const workScopeForQuery = addFacetQuery(workResultScope, "w.title");
+  const authorScopeForQuery = addFacetQuery(
+    authorResultScope,
+    "a.name",
+    authorQuery ?? (selectedFacet === "authors" ? facetQuery : undefined)
+  );
+  const workScopeForQuery = addFacetQuery(
+    workResultScope,
+    "w.title",
+    workQuery ?? (selectedFacet === "works" ? facetQuery : undefined)
+  );
 
   const [authors, works, genres, periods, languages, textTypes, compatibleFacets] = await Promise.all([
     shouldFetch("authors") ? getPool().query<FacetOption>(`

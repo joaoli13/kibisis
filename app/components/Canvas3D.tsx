@@ -29,6 +29,8 @@ const POINT_PALETTE = [
   "#a64f79"
 ];
 
+const MAP_TEXT_COLOR = "#2f332d";
+
 function categoryColor(value: string): string {
   if (value === "none") {
     return "#6f6f68";
@@ -165,7 +167,6 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
   const [passageBusy, setPassageBusy] = useState(false);
   const [passageError, setPassageError] = useState(false);
   const [labelsBusy, setLabelsBusy] = useState(false);
-  const [pendingShowLabels, setPendingShowLabels] = useState<boolean | null>(null);
   const visible = useMemo(
     () => nodes.filter((node) => node.level === granularity && Array.isArray(node.umap_3d)),
     [nodes, granularity]
@@ -290,20 +291,11 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
   }, [activePassageId]);
 
   useEffect(() => {
-    if (pendingShowLabels === null || pendingShowLabels === showLabels) {
-      return;
-    }
-    const handle = window.setTimeout(() => setShowLabels(pendingShowLabels), 50);
-    return () => window.clearTimeout(handle);
-  }, [pendingShowLabels, setShowLabels, showLabels]);
-
-  useEffect(() => {
     if (!labelsBusy) {
       return;
     }
     const handle = window.setTimeout(() => {
       setLabelsBusy(false);
-      setPendingShowLabels(null);
     }, 2200);
     return () => window.clearTimeout(handle);
   }, [labelsBusy]);
@@ -359,7 +351,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
         text: labels,
         hovertext: hover,
         textposition: "top center",
-        textfont: { color: "var(--map-text)", size: 10 },
+        textfont: { color: MAP_TEXT_COLOR, size: 10 },
         hovertemplate: "%{hovertext}<extra></extra>",
         customdata: plotNodes.map((node) => node.id),
         marker: {
@@ -505,17 +497,13 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
     window.dispatchEvent(new CustomEvent("kibisis:open-passage-detail", { detail: { passageId: activePassageId } }));
   }, [activePassageId, selectPassage]);
   const toggleLabels = useCallback(() => {
-    const nextShowLabels = !(pendingShowLabels ?? showLabels);
-    setPendingShowLabels(nextShowLabels);
-    setLabelsBusy(true);
-  }, [pendingShowLabels, showLabels]);
-  const displayedShowLabels = pendingShowLabels ?? showLabels;
+    const nextShowLabels = !showLabels;
+    setShowLabels(nextShowLabels);
+    setLabelsBusy(nextShowLabels);
+  }, [setShowLabels, showLabels]);
   const finishLabelRender = useCallback(() => {
-    if (pendingShowLabels === null || pendingShowLabels === showLabels) {
-      setLabelsBusy(false);
-      setPendingShowLabels(null);
-    }
-  }, [pendingShowLabels, showLabels]);
+    setLabelsBusy(false);
+  }, []);
 
   return (
     <main className={`flex min-h-[460px] flex-col lg:min-h-0 ${compact ? "lg:h-full" : ""}`}>
@@ -714,13 +702,13 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
               ) : null}
               <button
                 aria-busy={labelsBusy}
-                aria-pressed={displayedShowLabels}
-                className={`relative h-7 w-12 rounded-full transition ${displayedShowLabels ? "bg-[var(--accent)]" : "bg-neutral-300"}`}
+                aria-pressed={showLabels}
+                className={`relative h-7 w-12 rounded-full transition ${showLabels ? "bg-[var(--accent)]" : "bg-neutral-300"}`}
                 onClick={toggleLabels}
                 type="button"
               >
                 <span
-                  className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${displayedShowLabels ? "left-6" : "left-1"}`}
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${showLabels ? "left-6" : "left-1"}`}
                 />
               </button>
             </span>

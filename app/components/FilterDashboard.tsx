@@ -85,9 +85,10 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
       const params = new URLSearchParams({ dashboard: "true", scope, limit: "20" });
       appendFiltersToParams(params, draft);
       if (authorQuery.trim()) {
-        params.set("facetQuery", authorQuery.trim());
-      } else if (workQuery.trim()) {
-        params.set("facetQuery", workQuery.trim());
+        params.set("authorQuery", authorQuery.trim());
+      }
+      if (workQuery.trim()) {
+        params.set("workQuery", workQuery.trim());
       }
       try {
         const response = await fetch(`/api/metadata?${params.toString()}`);
