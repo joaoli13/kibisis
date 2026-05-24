@@ -28,6 +28,7 @@ export function SearchBar() {
   const selectPassage = useAtlasStore((state) => state.selectPassage);
   const results = useAtlasStore((state) => state.results);
   const [busy, setBusy] = useState(false);
+  const [searchRequestId, setSearchRequestId] = useState(0);
   const exampleQueries = useMemo(
     () => [...t.raw("examples.expressions"), ...t.raw("examples.questions")] as string[],
     [t]
@@ -36,6 +37,7 @@ export function SearchBar() {
   const canSubmitSearch = hasTextSearch(query);
 
   useEffect(() => {
+    let cancelled = false;
     const handle = window.setTimeout(async () => {
       if (granularity === "passage" && !hasPassageNodeScope(activeQuery, filters)) {
         setNodes([]);
@@ -49,19 +51,30 @@ export function SearchBar() {
       setBusy(true);
       const params = new URLSearchParams({ q: activeQuery, nodeLevel: granularity });
       appendFiltersToParams(params, filters);
-      const response = await fetch(`/api/search?${params.toString()}`);
-      const payload = (await response.json()) as SearchResponse;
-      const nextResults = hasActiveSearch ? payload.results ?? [] : [];
-      setResults(nextResults);
-      setNodes(payload.nodes ?? []);
-      setMapMode(hasActiveSearch ? "isolate" : "highlight");
-      selectPassage(hasActiveSearch ? nextResults[0]?.id ?? null : null);
-      if (hasActiveSearch && granularity !== "passage" && shouldAutoOpenPassageMap(nextResults)) {
-        setGranularity("passage");
+      try {
+        const response = await fetch(`/api/search?${params.toString()}`);
+        const payload = (await response.json()) as SearchResponse;
+        if (cancelled) {
+          return;
+        }
+        const nextResults = hasActiveSearch ? payload.results ?? [] : [];
+        setResults(nextResults);
+        setNodes(payload.nodes ?? []);
+        setMapMode(hasActiveSearch ? "isolate" : "highlight");
+        selectPassage(hasActiveSearch ? nextResults[0]?.id ?? null : null);
+        if (hasActiveSearch && granularity !== "passage" && shouldAutoOpenPassageMap(nextResults)) {
+          setGranularity("passage");
+        }
+      } finally {
+        if (!cancelled) {
+          setBusy(false);
+        }
       }
-      setBusy(false);
     }, 250);
-    return () => window.clearTimeout(handle);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
   }, [
     activeQuery,
     filters,
@@ -72,7 +85,8 @@ export function SearchBar() {
     setNodes,
     setPassageScopePrompt,
     setResults,
-    setGranularity
+    setGranularity,
+    searchRequestId
   ]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
@@ -80,8 +94,10 @@ export function SearchBar() {
     if (!canSubmitSearch) {
       return;
     }
+    setBusy(true);
     setPassageScopePrompt(false);
     setActiveQuery(query);
+    setSearchRequestId((current) => current + 1);
   }
 
   return (
@@ -99,7 +115,7 @@ export function SearchBar() {
             disabled={busy || !canSubmitSearch}
             type="submit"
           >
-            {t("button")}
+            {busy ? t("searching") : t("button")}
           </button>
           <div className="w-full text-left text-xs text-neutral-600 sm:w-24 sm:text-right">
             {busy ? t("searching") : t("results", { count: results.length })}
