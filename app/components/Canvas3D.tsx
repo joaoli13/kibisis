@@ -8,7 +8,16 @@ import { hasPassageNodeScope } from "@/lib/search-behavior";
 import { useAtlasStore } from "@/stores/atlas";
 import type { Passage, SemanticNode } from "@/lib/types";
 
-const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
+const Plot = dynamic(
+  async () => {
+    const [{ default: createPlotlyComponent }, { default: Plotly }] = await Promise.all([
+      import("react-plotly.js/factory"),
+      import("plotly.js-dist-min")
+    ]);
+    return createPlotlyComponent(Plotly);
+  },
+  { ssr: false }
+);
 
 const POINT_PALETTE = [
   "#315f72",
