@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: #f1f8f7;
+  --foreground: #171717;
+  --panel: #f7fbfa;
+  --line: #d3e5e2;
+  --accent: #3d746f;
+  --surface-muted: #eef7f5;
+  --axis-grid: #c8dfdc;
+  --axis-line: #a9c9c4;
+  --axis-zero: #b6d1cd;
+  --axis-text: #6f8682;
+  --map-text: #405a56;
+  --hover-border: #9fc2bd;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

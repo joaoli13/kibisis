@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="kibisis mark">
+  <title>kibisis mark</title>
+  <!-- pouch silhouette: rounded vessel with cinched neck -->
+  <path d="M 60 50
+           Q 60 35 75 35
+           L 125 35
+           Q 140 35 140 50
+           L 140 60
+           Q 175 80 175 130
+           Q 175 175 100 175
+           Q 25 175 25 130
+           Q 25 80 60 60
+           Z"
+        fill="none" stroke="#1a1a1a" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+
+  <!-- drawstring suggestion -->
+  <line x1="68" y1="50" x2="132" y2="50" stroke="#1a1a1a" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- three contents -->
+  <g fill="#c4593b">
+    <circle cx="65" cy="125" r="11"/>
+    <circle cx="100" cy="125" r="11"/>
+    <circle cx="135" cy="125" r="11"/>
+  </g>
+</svg>

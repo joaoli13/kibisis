@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: perseus-postgres-local
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: perseus
+      POSTGRES_USER: perseus
+      POSTGRES_PASSWORD: perseus
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U perseus -d perseus"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

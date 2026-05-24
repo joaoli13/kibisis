@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 200" role="img" aria-label="kibisis">
+  <title>kibisis</title>
+  <g stroke="#1a1a1a" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- k -->
+    <line x1="40" y1="30" x2="40" y2="155"/>
+    <line x1="46" y1="118" x2="92" y2="82"/>
+    <line x1="46" y1="118" x2="96" y2="155"/>
+
+    <!-- i (dotless stem #1) -->
+    <line x1="120" y1="78" x2="120" y2="155"/>
+
+    <!-- b -->
+    <line x1="160" y1="30" x2="160" y2="155"/>
+    <path d="M 160 92 C 220 88, 222 158, 160 155"/>
+
+    <!-- i (dotless stem #2) -->
+    <line x1="246" y1="78" x2="246" y2="155"/>
+
+    <!-- s -->
+    <path d="M 318 90
+             C 268 86, 268 118, 295 118
+             C 322 118, 322 158, 272 155"/>
+
+    <!-- i (dotless stem #3) -->
+    <line x1="348" y1="78" x2="348" y2="155"/>
+
+    <!-- s -->
+    <path d="M 420 90
+             C 370 86, 370 118, 397 118
+             C 424 118, 424 158, 374 155"/>
+  </g>
+
+  <!-- three tittles — the contents inside the kibisis -->
+  <g fill="#c4593b">
+    <circle cx="120" cy="52" r="9"/>
+    <circle cx="246" cy="52" r="9"/>
+    <circle cx="348" cy="52" r="9"/>
+  </g>
+</svg>

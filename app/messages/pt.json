@@ -1,0 +1,234 @@
+{
+  "app": {
+    "title": "kibisis.dev"
+  },
+  "nav": {
+    "about": "Sobre",
+    "atlas": "Atlas",
+    "brand": "Marca",
+    "projects": "Sites",
+    "support": "Apoiar",
+    "tagline": "atlas semântico dos clássicos"
+  },
+  "search": {
+    "placeholder": "Pesquise ideias, cenas, autores ou obras",
+    "button": "Buscar",
+    "searching": "Buscando",
+    "results": "{count} resultados",
+    "examplesLabel": "Exemplos",
+    "examples": {
+      "expressions": [
+        "hospitalidade na Odisseia",
+        "virtude e alma em Platão",
+        "tirania e lei na cidade",
+        "luto e vingança na tragédia",
+        "amizade e poder entre governantes"
+      ],
+      "questions": [
+        "Como os poetas representam o retorno do herói?",
+        "Onde aparecem argumentos sobre justiça e poder?",
+        "Como historiadores descrevem a fortuna na guerra?"
+      ]
+    }
+  },
+  "filters": {
+    "selected": "Filtros Ativos",
+    "clear": "Limpar tudo",
+    "metadata": "Metadados",
+    "noneSelected": "Nenhum filtro ativo.",
+    "searchQuery": "Pesquisa",
+    "removeSuffix": "remover",
+    "fields": {
+      "genre": "Gênero",
+      "author": "Autor",
+      "work": "Obra",
+      "period": "Período",
+      "language": "Idioma",
+      "textType": "Tipo de texto"
+    },
+    "all": {
+      "genre": "Todos os gêneros",
+      "author": "Todos os autores",
+      "work": "Todas as obras",
+      "period": "Todos os períodos",
+      "language": "Todos os idiomas",
+      "textType": "Todos os tipos de texto"
+    },
+    "values": {
+      "genre": {
+        "biography": "Biografia",
+        "comedy": "Comédia",
+        "epic": "Épica",
+        "geography": "Geografia",
+        "history": "História",
+        "medicine": "Medicina",
+        "miscellany": "Miscelânea",
+        "philosophy": "Filosofia",
+        "poetry": "Poesia",
+        "religion": "Religião",
+        "rhetoric": "Retorica",
+        "satire": "Satira",
+        "tragedy": "Tragédia"
+      },
+      "period": {
+        "archaic": "Arcaico (c. 800-480 a.C.)",
+        "classical": "Clássico (480-323 a.C.)",
+        "hellenistic": "Helenístico (323-31 a.C.)",
+        "roman": "Romano (31 a.C.-476 d.C.)"
+      },
+      "language": {
+        "en": "Inglês",
+        "eng": "Inglês",
+        "fre": "Francês",
+        "grc": "Grego",
+        "ita": "Italiano",
+        "la": "Latim",
+        "lat": "Latim",
+        "unknown": "Desconhecido"
+      },
+      "textType": {
+        "original": "Original",
+        "translation": "Tradução"
+      }
+    }
+  },
+  "resultsPanel": {
+    "results": "Resultados",
+    "passages": "passagens",
+    "inContext": "no contexto",
+    "copyContextJson": "Copiar contexto JSON",
+    "downloadContextJson": "Baixar contexto JSON",
+    "generateAnswer": "Gerar resposta",
+    "generatingAnswer": "Gerando resposta",
+    "responseFromRetrieved": "Resposta baseada nos trechos recuperados",
+    "openFullscreen": "Abrir em tela cheia",
+    "readAnswer": "Ler resposta",
+    "answerWorkspace": "Espaço de resposta",
+    "backToMap": "Voltar ao mapa",
+    "context": "Contexto",
+    "noAnswerYet": "Gere uma resposta a partir dos trechos selecionados para lê-la aqui.",
+    "sourcesUsed": "Fontes utilizadas",
+    "source": "Fonte",
+    "exclude": "Excluir",
+    "include": "Incluir",
+    "limit": "Limite {count}",
+    "viewPassage": "Ver trecho",
+    "noResults": "Nenhum resultado ainda.",
+    "notice": "As traduções ajudam na descoberta - elas não substituem edições críticas.",
+    "generatedResponse": "Resposta gerada",
+    "response": "Resposta",
+    "close": "Fechar",
+    "copySuccess": "Contexto copiado.",
+    "copyError": "Não foi possível copiar.",
+    "downloadStarted": "Download iniciado.",
+    "answerError": "Não foi possível gerar a resposta agora. Verifique a configuração do Gemini e tente novamente.",
+    "loadingPassage": "Carregando trecho.",
+    "loadPassageError": "Não foi possível carregar o trecho.",
+    "noPassageSelected": "Nenhum trecho selecionado.",
+    "part": "Parte",
+    "workFallback": "Obra",
+    "passageFallback": "Trecho",
+      "metadata": {
+        "author": "Autor",
+        "work": "Obra",
+        "workDate": "Data da obra",
+        "reference": "Referência",
+        "language": "Idioma",
+        "license": "Licença"
+    }
+  },
+  "canvas": {
+    "allAuthors": "Todos os autores",
+    "passage": "Passagem",
+    "passageMetadata": "Metadados da passagem",
+    "closeMetadata": "Fechar metadados",
+    "close": "Fechar",
+    "loading": "Carregando",
+    "goToText": "Ir ao texto",
+    "source": "Fonte",
+    "loadPassageError": "Não foi possível carregar o detalhe completo desta passagem.",
+    "mode": "Modo",
+    "highlight": "Destacar",
+    "isolate": "Isolar",
+    "pointSize": "Tamanho dos pontos",
+    "layers": "Camadas",
+    "showLabels": "Mostrar rótulos",
+    "scopePrompt": {
+      "label": "Escopo dos trechos",
+      "title": "Escolha um escopo antes de carregar trechos",
+      "body": "Mapas no nível de trecho são carregados dentro de um recorte menor do corpus para manter o atlas rápido e evitar tráfego desnecessário no banco.",
+      "chooseAuthor": "Escolha um autor para inspecionar as obras dele.",
+      "chooseWork": "Escolha uma obra para carregar apenas seus trechos.",
+      "search": "Ou faça uma busca para mapear os trechos retornados pela consulta."
+    },
+    "levels": {
+      "author": "autor",
+      "work": "obra",
+      "passage": "passagem"
+    },
+    "colorBy": {
+      "cluster": "cluster",
+      "author": "autor",
+      "genre": "gênero",
+      "period": "período"
+    },
+      "metadata": {
+        "author": "Autor",
+        "work": "Obra",
+        "workDate": "Data da obra",
+        "manifestation": "Manifestação",
+        "reference": "Referência",
+      "language": "Idioma",
+      "genre": "Gênero",
+      "period": "Período",
+        "cluster": "Cluster",
+        "license": "Licença"
+      }
+  },
+  "provenance": {
+    "source": "Fonte",
+    "datasetSnapshot": "Snapshot do corpus",
+    "notExported": "não exportado"
+  },
+  "about": {
+    "eyebrow": "Sobre / Imprensa",
+    "title": "Um atlas semântico para textos clássicos greco-romanos",
+    "summary": "kibisis.dev permite pesquisar ideias, cenas, autores e obras em trechos clássicos publicados com proveniência Perseus, e então inspecionar as evidências em um atlas semântico 3D.",
+    "openAtlas": "Abrir atlas",
+    "brandAssets": "Assets de marca",
+    "sections": {
+      "what": {
+        "title": "O que é",
+        "body": "O portal combina busca híbrida, filtros de metadados, visualização semântica 3D e respostas geradas com base em fontes. Ele foi desenhado para exploração: partir de uma ideia, refinar por autor ou obra, e ler os trechos por trás de cada resposta."
+      },
+      "vectors": {
+        "title": "Navegação semântica",
+        "body": "É possível explorar primeiro pelos autores: eles são posicionados semanticamente em relação às suas obras, e cada autor selecionado leva às obras e depois aos trechos. Cada ponto marca a ponta de um vetor que representa o sentido de um autor, obra ou trecho, conforme o nível atual do mapa."
+      },
+      "name": {
+        "title": "Por que Kibisis?",
+        "body": "No mito de Perseu, kibisis é a bolsa ou sacola dada ao herói para carregar a cabeça da Medusa. O nome combina com o portal como um recipiente cuidadoso para fragmentos textuais poderosos: trechos, fontes, metadados e interpretações geradas permanecem vinculados à sua proveniência."
+      },
+      "sources": {
+        "title": "Fontes e licença",
+        "body": "O corpus deriva do PerseusDL / Tufts University e de dados canônicos gregos e latinos relacionados. A superfície pública publica apenas trechos classificados como compatíveis com CC e mantém a proveniência visível na interface e nas respostas da API."
+      },
+      "ai": {
+        "title": "Limites de IA e busca",
+        "body": "A busca semântica recupera trechos provavelmente relacionados; ela não é uma edição crítica nem um juízo acadêmico final. As respostas geradas ficam restritas aos trechos selecionados e devem ser conferidas pelas fontes citadas. Traduções ajudam na descoberta; não substituem edições críticas."
+      },
+      "cite": {
+        "title": "Como citar",
+        "body": "Cite kibisis.dev com o snapshot do corpus exibido no rodapé, e cite trechos individuais por autor, obra, referência da passagem, CTS URN e link de fonte quando disponível."
+      },
+      "press": {
+        "title": "Resumo para imprensa",
+        "body": "kibisis.dev é um atlas semântico experimental para literatura clássica: uma interface de pesquisa para navegar autores, obras, trechos e respostas geradas com base em fontes."
+      },
+      "contact": {
+        "title": "Links",
+        "body": "Use o repositório GitHub para contexto do projeto e a página de marca para ícones, lockups, paleta e materiais de lançamento."
+      }
+    }
+  }
+}

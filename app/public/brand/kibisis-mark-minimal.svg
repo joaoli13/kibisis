@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="kibisis dots">
+  <title>kibisis dots</title>
+  <!-- minimalist mark: the three tittles alone, evoking the i-rhythm -->
+  <g fill="#c4593b">
+    <circle cx="55" cy="100" r="18"/>
+    <circle cx="100" cy="100" r="18"/>
+    <circle cx="145" cy="100" r="18"/>
+  </g>
+</svg>

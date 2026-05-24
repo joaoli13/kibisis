@@ -1,0 +1,234 @@
+{
+  "app": {
+    "title": "kibisis.dev"
+  },
+  "nav": {
+    "about": "About",
+    "atlas": "Atlas",
+    "brand": "Brand",
+    "projects": "Sites",
+    "support": "Support",
+    "tagline": "semantic classics atlas"
+  },
+  "search": {
+    "placeholder": "Search ideas, scenes, authors, or works",
+    "button": "Search",
+    "searching": "Searching",
+    "results": "{count} results",
+    "examplesLabel": "Examples",
+    "examples": {
+      "expressions": [
+        "hospitality in the Odyssey",
+        "virtue and soul in Plato",
+        "tyranny and law in the city",
+        "grief and revenge in tragedy",
+        "friendship and power among rulers"
+      ],
+      "questions": [
+        "How do poets represent the hero's return?",
+        "Where do arguments about justice and power appear?",
+        "How do historians describe fortune in war?"
+      ]
+    }
+  },
+  "filters": {
+    "selected": "Active Filters",
+    "clear": "Clear all",
+    "metadata": "Metadata",
+    "noneSelected": "No active filters.",
+    "searchQuery": "Search",
+    "removeSuffix": "remove",
+    "fields": {
+      "genre": "Genre",
+      "author": "Author",
+      "work": "Work",
+      "period": "Period",
+      "language": "Language",
+      "textType": "Text type"
+    },
+    "all": {
+      "genre": "All genres",
+      "author": "All authors",
+      "work": "All works",
+      "period": "All periods",
+      "language": "All languages",
+      "textType": "All text types"
+    },
+    "values": {
+      "genre": {
+        "biography": "Biography",
+        "comedy": "Comedy",
+        "epic": "Epic",
+        "geography": "Geography",
+        "history": "History",
+        "medicine": "Medicine",
+        "miscellany": "Miscellany",
+        "philosophy": "Philosophy",
+        "poetry": "Poetry",
+        "religion": "Religion",
+        "rhetoric": "Rhetoric",
+        "satire": "Satire",
+        "tragedy": "Tragedy"
+      },
+      "period": {
+        "archaic": "Archaic (c. 800-480 BCE)",
+        "classical": "Classical (480-323 BCE)",
+        "hellenistic": "Hellenistic (323-31 BCE)",
+        "roman": "Roman (31 BCE-476 CE)"
+      },
+      "language": {
+        "en": "English",
+        "eng": "English",
+        "fre": "French",
+        "grc": "Greek",
+        "ita": "Italian",
+        "la": "Latin",
+        "lat": "Latin",
+        "unknown": "Unknown"
+      },
+      "textType": {
+        "original": "Original",
+        "translation": "Translation"
+      }
+    }
+  },
+  "resultsPanel": {
+    "results": "Results",
+    "passages": "passages",
+    "inContext": "in context",
+    "copyContextJson": "Copy context JSON",
+    "downloadContextJson": "Download context JSON",
+    "generateAnswer": "Generate answer",
+    "generatingAnswer": "Generating answer",
+    "responseFromRetrieved": "Response based on retrieved passages",
+    "openFullscreen": "Open fullscreen",
+    "readAnswer": "Read answer",
+    "answerWorkspace": "Answer workspace",
+    "backToMap": "Back to map",
+    "context": "Context",
+    "noAnswerYet": "Generate an answer from selected passages to read it here.",
+    "sourcesUsed": "Sources used",
+    "source": "Source",
+    "exclude": "Exclude",
+    "include": "Include",
+    "limit": "Limit {count}",
+    "viewPassage": "View passage",
+    "noResults": "No results yet.",
+    "notice": "Translations aid discovery - they do not replace critical editions.",
+    "generatedResponse": "Generated response",
+    "response": "Response",
+    "close": "Close",
+    "copySuccess": "Context copied.",
+    "copyError": "Could not copy.",
+    "downloadStarted": "Download started.",
+    "answerError": "Could not generate the answer now. Check Gemini configuration and try again.",
+    "loadingPassage": "Loading passage.",
+    "loadPassageError": "Could not load the passage.",
+    "noPassageSelected": "No passage selected.",
+    "part": "Part",
+    "workFallback": "Work",
+    "passageFallback": "Passage",
+      "metadata": {
+        "author": "Author",
+        "work": "Work",
+        "workDate": "Work date",
+        "reference": "Reference",
+        "language": "Language",
+        "license": "License"
+    }
+  },
+  "canvas": {
+    "allAuthors": "All authors",
+    "passage": "Passage",
+    "passageMetadata": "Passage metadata",
+    "closeMetadata": "Close metadata",
+    "close": "Close",
+    "loading": "Loading",
+    "goToText": "Go to text",
+    "source": "Source",
+    "loadPassageError": "Could not load the full detail for this passage.",
+    "mode": "Mode",
+    "highlight": "Highlight",
+    "isolate": "Isolate",
+    "pointSize": "Point size",
+    "layers": "Layers",
+    "showLabels": "Show labels",
+    "scopePrompt": {
+      "label": "Passage scope",
+      "title": "Choose a scope before loading passages",
+      "body": "Passage-level maps are intentionally loaded inside a smaller corpus scope to keep the atlas fast and avoid unnecessary database traffic.",
+      "chooseAuthor": "Choose an author to inspect that author's works.",
+      "chooseWork": "Choose a work to load only its passages.",
+      "search": "Or submit a search to map the passages returned by the query."
+    },
+    "levels": {
+      "author": "author",
+      "work": "work",
+      "passage": "passage"
+    },
+    "colorBy": {
+      "cluster": "cluster",
+      "author": "author",
+      "genre": "genre",
+      "period": "period"
+    },
+      "metadata": {
+        "author": "Author",
+        "work": "Work",
+        "workDate": "Work date",
+        "manifestation": "Manifestation",
+        "reference": "Reference",
+      "language": "Language",
+      "genre": "Genre",
+      "period": "Period",
+        "cluster": "Cluster",
+        "license": "License"
+      }
+  },
+  "provenance": {
+    "source": "Source",
+    "datasetSnapshot": "Dataset snapshot",
+    "notExported": "not exported"
+  },
+  "about": {
+    "eyebrow": "About / Press",
+    "title": "A semantic atlas for Greco-Roman classical texts",
+    "summary": "kibisis.dev lets readers search ideas, scenes, authors, and works across published Perseus-compatible classical passages, then inspect the evidence in a 3D semantic atlas.",
+    "openAtlas": "Open atlas",
+    "brandAssets": "Brand assets",
+    "sections": {
+      "what": {
+        "title": "What it is",
+        "body": "The portal combines hybrid search, metadata filters, 3D semantic visualization, and source-bound generated answers. It is designed for exploration: start from an idea, narrow by author or work, and read the passages behind every answer."
+      },
+      "vectors": {
+        "title": "Semantic navigation",
+        "body": "You can explore from authors first: authors are positioned semantically in relation to their works, then each selected author leads to works and passages. Every point marks the tip of a vector representing the meaning of an author, work, or passage, depending on the current map level."
+      },
+      "name": {
+        "title": "Why Kibisis?",
+        "body": "In the Perseus myth, the kibisis is the pouch or satchel given to the hero to carry Medusa's head. The name fits this portal as a careful container for powerful textual fragments: passages, sources, metadata, and generated interpretations stay bound to their provenance."
+      },
+      "sources": {
+        "title": "Sources and license",
+        "body": "The corpus is derived from PerseusDL / Tufts University and related canonical Greek and Latin data. The public surface publishes only passages classified as CC-compatible and keeps provenance visible in the interface and API responses."
+      },
+      "ai": {
+        "title": "AI and search limits",
+        "body": "Semantic search retrieves likely related passages; it is not a critical edition or a final scholarly judgment. Generated answers are restricted to the selected passages and should be checked against the cited sources. Translations aid discovery; they do not replace critical editions."
+      },
+      "cite": {
+        "title": "How to cite",
+        "body": "Cite kibisis.dev with the dataset snapshot shown in the footer, and cite individual passages through their author, work, passage reference, CTS URN, and source link when available."
+      },
+      "press": {
+        "title": "Press summary",
+        "body": "kibisis.dev is an experimental semantic atlas for classical literature: a research interface for navigating authors, works, passages, and generated source-grounded answers."
+      },
+      "contact": {
+        "title": "Links",
+        "body": "Use the GitHub repository for project context and the brand page for marks, lockups, palette, and launch material."
+      }
+    }
+  }
+}

@@ -1,0 +1,121 @@
+"use client";
+
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useAtlasStore } from "@/stores/atlas";
+import { hasPassageNodeScope, hasTextSearch } from "@/lib/search-behavior";
+import type { SearchResult, SemanticNode } from "@/lib/types";
+
+type SearchResponse = {
+  results: SearchResult[];
+  nodes: SemanticNode[];
+};
+
+export function SearchBar() {
+  const t = useTranslations("search");
+  const query = useAtlasStore((state) => state.query);
+  const activeQuery = useAtlasStore((state) => state.activeQuery);
+  const filters = useAtlasStore((state) => state.filters);
+  const granularity = useAtlasStore((state) => state.granularity);
+  const setQuery = useAtlasStore((state) => state.setQuery);
+  const setActiveQuery = useAtlasStore((state) => state.setActiveQuery);
+  const setResults = useAtlasStore((state) => state.setResults);
+  const setNodes = useAtlasStore((state) => state.setNodes);
+  const setMapMode = useAtlasStore((state) => state.setMapMode);
+  const setPassageScopePrompt = useAtlasStore((state) => state.setPassageScopePrompt);
+  const selectPassage = useAtlasStore((state) => state.selectPassage);
+  const results = useAtlasStore((state) => state.results);
+  const [busy, setBusy] = useState(false);
+  const exampleQueries = useMemo(
+    () => [...t.raw("examples.expressions"), ...t.raw("examples.questions")] as string[],
+    [t]
+  );
+  const hasActiveSearch = useMemo(() => hasTextSearch(activeQuery), [activeQuery]);
+  const canSubmitSearch = hasTextSearch(query);
+
+  useEffect(() => {
+    const handle = window.setTimeout(async () => {
+      if (granularity === "passage" && !hasPassageNodeScope(activeQuery, filters)) {
+        setNodes([]);
+        setResults([]);
+        selectPassage(null);
+        setPassageScopePrompt(true);
+        setBusy(false);
+        return;
+      }
+      setPassageScopePrompt(false);
+      setBusy(true);
+      const params = new URLSearchParams({ q: activeQuery, nodeLevel: granularity });
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+          params.set(key, value);
+        }
+      });
+      const response = await fetch(`/api/search?${params.toString()}`);
+      const payload = (await response.json()) as SearchResponse;
+      setResults(hasActiveSearch ? payload.results ?? [] : []);
+      setNodes(payload.nodes ?? []);
+      setMapMode(hasActiveSearch ? "isolate" : "highlight");
+      selectPassage(hasActiveSearch ? payload.results?.[0]?.id ?? null : null);
+      setBusy(false);
+    }, 250);
+    return () => window.clearTimeout(handle);
+  }, [
+    activeQuery,
+    filters,
+    granularity,
+    hasActiveSearch,
+    selectPassage,
+    setMapMode,
+    setNodes,
+    setPassageScopePrompt,
+    setResults
+  ]);
+
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canSubmitSearch) {
+      return;
+    }
+    setPassageScopePrompt(false);
+    setActiveQuery(query);
+  }
+
+  return (
+    <section className="col-span-full border-b border-[var(--line)] bg-[var(--surface-muted)] px-4 py-3">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
+        <form className="flex min-w-0 flex-1 items-center gap-2" onSubmit={submitSearch}>
+          <input
+            className="h-10 min-w-0 flex-1 border border-[var(--line)] bg-white px-3 text-sm"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t("placeholder")}
+            value={query}
+          />
+          <button
+            className="h-10 border border-[var(--accent)] bg-[var(--accent)] px-4 text-sm font-semibold text-white disabled:opacity-50"
+            disabled={busy || !canSubmitSearch}
+            type="submit"
+          >
+            {t("button")}
+          </button>
+          <div className="w-24 text-right text-xs text-neutral-600">
+            {busy ? t("searching") : t("results", { count: results.length })}
+          </div>
+        </form>
+        <div className="flex max-w-3xl flex-wrap items-center gap-2 text-xs">
+          <span className="font-semibold uppercase tracking-wide text-neutral-500">{t("examplesLabel")}</span>
+          {exampleQueries.map((example) => (
+            <button
+              className="rounded-full border border-[var(--line)] bg-white px-2 py-1 text-neutral-700 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              key={example}
+              onClick={() => setQuery(example)}
+              type="button"
+            >
+              {example}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
