@@ -163,6 +163,8 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
   const [activePassage, setActivePassage] = useState<Passage | null>(null);
   const [passageBusy, setPassageBusy] = useState(false);
   const [passageError, setPassageError] = useState(false);
+  const [labelsBusy, setLabelsBusy] = useState(false);
+  const [pendingShowLabels, setPendingShowLabels] = useState<boolean | null>(null);
   const visible = useMemo(
     () => nodes.filter((node) => node.level === granularity && Array.isArray(node.umap_3d)),
     [nodes, granularity]
@@ -284,6 +286,25 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
     };
   }, [activePassageId]);
 
+  useEffect(() => {
+    if (pendingShowLabels === null || pendingShowLabels === showLabels) {
+      return;
+    }
+    const handle = window.setTimeout(() => setShowLabels(pendingShowLabels), 50);
+    return () => window.clearTimeout(handle);
+  }, [pendingShowLabels, setShowLabels, showLabels]);
+
+  useEffect(() => {
+    if (!labelsBusy) {
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      setLabelsBusy(false);
+      setPendingShowLabels(null);
+    }, 2200);
+    return () => window.clearTimeout(handle);
+  }, [labelsBusy]);
+
   const metadataRows = useMemo(
     () => [
       [t("metadata.author"), activeMapNode?.author_label ?? activePassage?.author ?? activeMapNode?.author_id],
@@ -332,7 +353,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
         x,
         y,
         z,
-        text: showLabels ? labels : undefined,
+        text: labels,
         hovertext: hover,
         textposition: "top center",
         textfont: { color: "var(--map-text)", size: 10 },
@@ -480,6 +501,18 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
     selectPassage(activePassageId);
     window.dispatchEvent(new CustomEvent("kibisis:open-passage-detail", { detail: { passageId: activePassageId } }));
   }, [activePassageId, selectPassage]);
+  const toggleLabels = useCallback(() => {
+    const nextShowLabels = !(pendingShowLabels ?? showLabels);
+    setPendingShowLabels(nextShowLabels);
+    setLabelsBusy(true);
+  }, [pendingShowLabels, showLabels]);
+  const displayedShowLabels = pendingShowLabels ?? showLabels;
+  const finishLabelRender = useCallback(() => {
+    if (pendingShowLabels === null || pendingShowLabels === showLabels) {
+      setLabelsBusy(false);
+      setPendingShowLabels(null);
+    }
+  }, [pendingShowLabels, showLabels]);
 
   return (
     <main className={`flex min-h-0 flex-col ${compact ? "h-full" : ""}`}>
@@ -543,9 +576,16 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
           style={{ width: "100%", height: "100%" }}
           useResizeHandler
           onClick={handleClick}
+          onAfterPlot={finishLabelRender}
         />
+        {labelsBusy ? (
+          <div className="absolute left-4 top-4 z-10 flex items-center gap-2 border border-[var(--line)] bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-700 shadow-lg">
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+            {t("loading")}
+          </div>
+        ) : null}
         {passageScopePrompt ? (
-          <aside className="absolute left-4 top-4 z-10 w-[min(420px,calc(100%-2rem))] border border-[var(--line)] bg-white p-4 shadow-xl">
+          <aside className={`absolute left-4 z-10 w-[min(420px,calc(100%-2rem))] border border-[var(--line)] bg-white p-4 shadow-xl ${labelsBusy ? "top-16" : "top-4"}`}>
             <div className="text-xs font-semibold uppercase tracking-wide text-neutral-600">{t("scopePrompt.label")}</div>
             <h2 className="mt-1 text-base font-semibold">{t("scopePrompt.title")}</h2>
             <p className="mt-2 text-sm leading-6 text-neutral-700">{t("scopePrompt.body")}</p>
@@ -662,16 +702,25 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
           <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-700">{t("layers")}</div>
           <label className="flex items-center justify-between gap-3 text-sm text-neutral-800">
             {t("showLabels")}
-            <button
-              aria-pressed={showLabels}
-              className={`relative h-7 w-12 rounded-full transition ${showLabels ? "bg-[var(--accent)]" : "bg-neutral-300"}`}
-              onClick={() => setShowLabels(!showLabels)}
-              type="button"
-            >
-              <span
-                className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${showLabels ? "left-6" : "left-1"}`}
-              />
-            </button>
+            <span className="flex items-center gap-2">
+              {labelsBusy ? (
+                <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+                  {t("loading")}
+                </span>
+              ) : null}
+              <button
+                aria-busy={labelsBusy}
+                aria-pressed={displayedShowLabels}
+                className={`relative h-7 w-12 rounded-full transition ${displayedShowLabels ? "bg-[var(--accent)]" : "bg-neutral-300"}`}
+                onClick={toggleLabels}
+                type="button"
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${displayedShowLabels ? "left-6" : "left-1"}`}
+                />
+              </button>
+            </span>
           </label>
         </section>
       </div>

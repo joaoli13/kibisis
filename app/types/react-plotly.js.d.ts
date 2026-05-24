@@ -8,6 +8,7 @@ declare module "react-plotly.js" {
     style?: CSSProperties;
     useResizeHandler?: boolean;
     onClick?: (event: { points: Array<{ customdata?: unknown }> }) => void;
+    onAfterPlot?: () => void;
   };
 
   const Plot: ComponentType<PlotProps>;
