@@ -3,6 +3,16 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAtlasStore } from "@/stores/atlas";
+import { FilterDashboard } from "@/components/FilterDashboard";
+import {
+  appendFiltersToParams,
+  clearFilterKey,
+  firstFilterValue,
+  hasAnyMetadataFilter,
+  normalizeSearchFilters,
+  setFilterValue,
+  valuesForFilter
+} from "@/lib/filters";
 import { hasTextSearch } from "@/lib/search-behavior";
 import type { FacetOption, MetadataFacets, SearchFilters } from "@/lib/types";
 
@@ -87,8 +97,9 @@ function optionLabel(
 }
 
 function optionsFor(key: keyof SearchFilters, facets: MetadataFacets, filters: SearchFilters) {
-  if (key === "work" && filters.author) {
-    return facets.works.filter((work) => work.author_id === filters.author);
+  const authorValues = valuesForFilter(filters.author);
+  if (key === "work" && authorValues.length === 1) {
+    return facets.works.filter((work) => work.author_id === authorValues[0]);
   }
   return facets[filterFields.find((field) => field.key === key)?.optionsKey ?? "authors"];
 }
@@ -96,17 +107,21 @@ function optionsFor(key: keyof SearchFilters, facets: MetadataFacets, filters: S
 function normalizeFilters(filters: SearchFilters, facets: MetadataFacets): SearchFilters {
   const next: SearchFilters = { ...filters };
   filterFields.forEach(({ key }) => {
-    const value = next[key];
-    if (!value) {
+    const values = valuesForFilter(next[key]);
+    if (!values.length) {
       return;
     }
     const options = optionsFor(key, facets, next);
-    if (!options.some((option) => option.id === value)) {
+    const validValues = values.filter((value) => options.some((option) => option.id === value));
+    if (validValues.length !== values.length) {
+      next[key] = validValues.length === 1 ? validValues[0] : validValues.length ? validValues : undefined;
+    }
+    if (!validValues.length) {
       next[key] = undefined;
     }
   });
   filterFields.forEach(({ key }) => {
-    if (next[key]) {
+    if (valuesForFilter(next[key]).length) {
       return;
     }
     const options = optionsFor(key, facets, next);
@@ -118,7 +133,7 @@ function normalizeFilters(filters: SearchFilters, facets: MetadataFacets): Searc
 }
 
 function filtersEqual(a: SearchFilters, b: SearchFilters) {
-  return filterFields.every(({ key }) => (a[key] ?? "") === (b[key] ?? ""));
+  return filterFields.every(({ key }) => valuesForFilter(a[key]).join("\u0000") === valuesForFilter(b[key]).join("\u0000"));
 }
 
 export function SearchPanel() {
@@ -133,16 +148,13 @@ export function SearchPanel() {
   const setResults = useAtlasStore((state) => state.setResults);
   const selectPassage = useAtlasStore((state) => state.selectPassage);
   const [facets, setFacets] = useState<MetadataFacets>(emptyFacets);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     async function loadMetadata() {
       const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          params.set(key, value);
-        }
-      });
+      appendFiltersToParams(params, filters);
       const response = await fetch(`/api/metadata?${params.toString()}`);
       const payload = (await response.json()) as MetadataResponse;
       if (!cancelled) {
@@ -164,13 +176,14 @@ export function SearchPanel() {
     };
   }, [filters, setFilters]);
 
-  const visibleWorks = filters.author
-    ? facets.works.filter((work) => work.author_id === filters.author)
+  const authorValues = valuesForFilter(filters.author);
+  const visibleWorks = authorValues.length === 1
+    ? facets.works.filter((work) => work.author_id === authorValues[0])
     : facets.works;
-  const activeFilters = filterFields.filter(({ key }) => Boolean(filters[key]));
+  const activeFilters = filterFields.filter(({ key }) => valuesForFilter(filters[key]).length > 0);
   const displayedSearchQuery = activeQuery.trim() || query.trim();
   const hasSearchQuery = hasTextSearch(displayedSearchQuery);
-  const hasAnyActiveFilter = activeFilters.length > 0 || hasSearchQuery;
+  const hasAnyActiveFilter = hasAnyMetadataFilter(filters) || hasSearchQuery;
 
   function clearAllFilters() {
     setFilters({});
@@ -224,11 +237,11 @@ export function SearchPanel() {
                         return;
                       }
                       setPassageScopePrompt(false);
-                      setFilters({ ...filters, [key]: undefined });
+                      setFilters(clearFilterKey(filters, key));
                     }}
                     type="button"
                   >
-                    {label}: {optionLabel(options, filters[key], key, t)} x
+                    {label}: {valuesForFilter(filters[key]).map((value) => optionLabel(options, value, key, t)).join(" OR ")} x
                   </button>
                 );
               })}
@@ -240,7 +253,20 @@ export function SearchPanel() {
 
         <section className="rounded border border-[var(--line)] bg-white p-3">
           <div className="mb-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-700">{t("filters.metadata")}</h2>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-700">{t("filters.metadata")}</h2>
+                <p className="mt-1 text-xs leading-5 text-neutral-500">{t("filters.dashboardHint")}</p>
+              </div>
+              <button
+                className="shrink-0 border border-[var(--accent)] px-2 py-1 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--surface-muted)]"
+                onClick={() => setDashboardOpen(true)}
+                title={t("filters.dashboardTooltip")}
+                type="button"
+              >
+                {t("filters.dashboardButton")}
+              </button>
+            </div>
           </div>
           <div className="space-y-3">
             {filterFields.map(({ key, labelKey, optionsKey }) => {
@@ -251,18 +277,18 @@ export function SearchPanel() {
                   <span className="mb-1 block text-xs font-medium text-neutral-600">{label}</span>
                   <select
                     className="w-full border border-[var(--line)] bg-white px-2 py-2 text-sm"
-                    disabled={!options.length || (key === "work" && Boolean(filters.author) && !visibleWorks.length)}
+                    disabled={!options.length || (key === "work" && authorValues.length === 1 && !visibleWorks.length)}
                     onChange={(event) => {
                       const value = event.target.value || undefined;
                       if (key === "author") {
                         setPassageScopePrompt(false);
-                        setFilters({ ...filters, author: value, work: undefined });
+                        setFilters(setFilterValue(filters, "author", value));
                         return;
                       }
                       setPassageScopePrompt(false);
-                      setFilters({ ...filters, [key]: value });
+                      setFilters(setFilterValue(filters, key, value));
                     }}
-                    value={filters[key] ?? ""}
+                    value={firstFilterValue(filters[key]) ?? ""}
                   >
                     <option value="">{t(`filters.all.${labelKey}`)}</option>
                     {options.map((option) => (
@@ -278,6 +304,19 @@ export function SearchPanel() {
           </div>
         </section>
       </div>
+      {dashboardOpen ? (
+        <FilterDashboard
+          facets={facets}
+          filters={filters}
+          onApply={(nextFilters) => {
+            setFilters(normalizeSearchFilters(nextFilters));
+            setPassageScopePrompt(false);
+            setDashboardOpen(false);
+          }}
+          onClose={() => setDashboardOpen(false)}
+          translateOption={localizedOptionLabel}
+        />
+      ) : null}
     </aside>
   );
 }

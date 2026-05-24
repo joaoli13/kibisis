@@ -44,19 +44,25 @@ export type SemanticNode = {
 
 export type NodeLevel = Extract<SemanticNode["level"], "passage" | "work" | "author">;
 
+export type SearchFilterValue = string | string[];
+
 export type SearchFilters = {
-  author?: string;
-  work?: string;
-  genre?: string;
-  period?: string;
-  language?: string;
-  textType?: string;
+  author?: SearchFilterValue;
+  work?: SearchFilterValue;
+  genre?: SearchFilterValue;
+  period?: SearchFilterValue;
+  language?: SearchFilterValue;
+  textType?: SearchFilterValue;
 };
 
 export type FacetOption = {
   id: string;
   label: string;
   count?: number;
+  work_count?: number;
+  passage_count?: number;
+  selected?: boolean;
+  compatible?: boolean;
   author_id?: string | null;
 };
 

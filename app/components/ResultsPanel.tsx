@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { valuesForFilter } from "@/lib/filters";
 import { useAtlasStore } from "@/stores/atlas";
 import type { Passage, SearchFilters } from "@/lib/types";
 
@@ -179,12 +180,14 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
   const query = useAtlasStore((state) => state.activeQuery);
   const filters = useAtlasStore((state) => state.filters);
   const markdown = useAtlasStore((state) => state.answerMarkdown);
+  const answerQuestion = useAtlasStore((state) => state.answerQuestion);
   const sources = useAtlasStore((state) => state.answerSources);
   const answerError = useAtlasStore((state) => state.answerError);
   const results = useAtlasStore((state) => state.results);
   const selectedPassageId = useAtlasStore((state) => state.selectedPassageId);
   const setAnswerError = useAtlasStore((state) => state.setAnswerError);
   const setAnswerMarkdown = useAtlasStore((state) => state.setAnswerMarkdown);
+  const setAnswerQuestion = useAtlasStore((state) => state.setAnswerQuestion);
   const setAnswerSources = useAtlasStore((state) => state.setAnswerSources);
   const selectPassage = useAtlasStore((state) => state.selectPassage);
   const setWorkspaceMode = useAtlasStore((state) => state.setWorkspaceMode);
@@ -215,22 +218,26 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
     }
     filterOrder.forEach((key) => {
       const value = filters[key];
-      if (!value) {
+      const values = valuesForFilter(value);
+      if (!values.length) {
         return;
       }
       const label = filtersT(`fields.${key}`);
       if (key === "author") {
-        const author = results.find((result) => result.author_id === value)?.author;
-        parts.push(`${label}: ${author ?? value}`);
+        const labels = values.map((item) => results.find((result) => result.author_id === item)?.author ?? item);
+        parts.push(`${label}: ${labels.join(" OR ")}`);
         return;
       }
       if (key === "work") {
-        const work = results.find((result) => result.work_id === value)?.work;
-        parts.push(`${label}: ${work ?? value}`);
+        const labels = values.map((item) => results.find((result) => result.work_id === item)?.work ?? item);
+        parts.push(`${label}: ${labels.join(" OR ")}`);
         return;
       }
-      const messageKey = filterValueMessageKeys[key]?.[value.toLowerCase()];
-      parts.push(`${label}: ${messageKey ? filtersT(messageKey) : value}`);
+      const labels = values.map((item) => {
+        const messageKey = filterValueMessageKeys[key]?.[item.toLowerCase()];
+        return messageKey ? filtersT(messageKey) : item;
+      });
+      parts.push(`${label}: ${labels.join(" OR ")}`);
     });
     return parts.join(" · ");
   }, [filters, filtersT, query, results]);
@@ -327,11 +334,19 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
   async function generateAnswer() {
     setBusy(true);
     setAnswerError("");
+    const effectiveQuestion = answerQuestion.trim() || query;
     try {
       const response = await fetch("/api/synthesize", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ query, filters, locale, passageIds: contextPassages.map((result) => result.id) })
+        body: JSON.stringify({
+          query,
+          retrievalQuery: query,
+          question: effectiveQuestion,
+          filters,
+          locale,
+          passageIds: contextPassages.map((result) => result.id)
+        })
       });
       const payload = (await response.json()) as AnswerResponse;
       if (!response.ok) {
@@ -453,6 +468,27 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
               <div className="mt-1 text-sm text-neutral-600">
                 {results.length} {passageLabel} · {contextPassages.length} {contextLabel}
               </div>
+              <label className="mt-3 block">
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                  {t("answerQuestion")}
+                </span>
+                <textarea
+                  className="min-h-24 w-full border border-[var(--line)] bg-white px-3 py-2 text-sm leading-5"
+                  onChange={(event) => setAnswerQuestion(event.target.value)}
+                  placeholder={t("answerQuestionPlaceholder")}
+                  title={t("answerQuestionTooltip")}
+                  value={answerQuestion}
+                />
+              </label>
+              {query.trim() ? (
+                <button
+                  className="mt-2 text-xs font-semibold text-[var(--accent)] hover:underline"
+                  onClick={() => setAnswerQuestion(query)}
+                  type="button"
+                >
+                  {t("useSearchAsQuestion")}
+                </button>
+              ) : null}
               <div className="mt-3 grid gap-2">
                 <button
                   className="border border-[var(--line)] bg-white px-3 py-2 text-xs font-semibold text-neutral-700 disabled:opacity-50"
@@ -565,6 +601,27 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
               {busy ? t("generatingAnswer") : t("generateAnswer")}
             </button>
           </div>
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-700">
+              {t("answerQuestion")}
+            </span>
+            <textarea
+              className="min-h-20 w-full border border-[var(--line)] px-3 py-2 text-sm leading-5"
+              onChange={(event) => setAnswerQuestion(event.target.value)}
+              placeholder={t("answerQuestionPlaceholder")}
+              title={t("answerQuestionTooltip")}
+              value={answerQuestion}
+            />
+          </label>
+          {query.trim() ? (
+            <button
+              className="text-xs font-semibold text-[var(--accent)] hover:underline"
+              onClick={() => setAnswerQuestion(query)}
+              type="button"
+            >
+              {t("useSearchAsQuestion")}
+            </button>
+          ) : null}
         </div>
 
         {markdown || answerError ? (

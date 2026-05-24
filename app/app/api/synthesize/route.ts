@@ -10,6 +10,8 @@ import type { SearchFilters } from "@/lib/types";
 
 type SynthesizeBody = {
   query?: unknown;
+  retrievalQuery?: unknown;
+  question?: unknown;
   passageIds?: unknown;
   filters?: unknown;
   locale?: unknown;
@@ -27,7 +29,11 @@ function filtersAreValid(value: unknown): value is SearchFilters | undefined {
   }
   return filterKeys.every((key) => {
     const fieldValue = (value as Record<string, unknown>)[key];
-    return fieldValue === undefined || typeof fieldValue === "string";
+    return (
+      fieldValue === undefined ||
+      typeof fieldValue === "string" ||
+      (Array.isArray(fieldValue) && fieldValue.every((item) => typeof item === "string"))
+    );
   });
 }
 
@@ -35,9 +41,18 @@ function localeIsValid(value: unknown): value is SynthesisLocale | undefined {
   return value === undefined || (typeof value === "string" && locales.has(value as SynthesisLocale));
 }
 
-function bodyIsValid(body: SynthesizeBody): body is { query: string; passageIds: string[]; filters?: SearchFilters; locale?: SynthesisLocale } {
+function bodyIsValid(body: SynthesizeBody): body is {
+  query: string;
+  retrievalQuery?: string;
+  question?: string;
+  passageIds: string[];
+  filters?: SearchFilters;
+  locale?: SynthesisLocale;
+} {
   return (
     typeof body.query === "string" &&
+    (body.retrievalQuery === undefined || typeof body.retrievalQuery === "string") &&
+    (body.question === undefined || typeof body.question === "string") &&
     Array.isArray(body.passageIds) &&
     body.passageIds.every((id) => typeof id === "string") &&
     filtersAreValid(body.filters) &&
@@ -116,9 +131,13 @@ export async function POST(request: NextRequest) {
       } as never
     });
     const context = buildSynthesisContext(passages);
-    const queryMode = isQuestion(body.query) ? "question" : "topic";
+    const effectiveQuestion = body.question?.trim() || body.query;
+    const retrievalQuery = body.retrievalQuery?.trim() || (body.question?.trim() ? body.query : "");
+    const queryMode = isQuestion(effectiveQuestion) ? "question" : "topic";
     try {
-      let result = await model.generateContent(buildSynthesisPrompt(body.query, queryMode, context, false, body.filters, body.locale));
+      let result = await model.generateContent(
+        buildSynthesisPrompt(effectiveQuestion, queryMode, context, false, body.filters, body.locale, retrievalQuery)
+      );
       let markdown = result.response.text();
       let reason = finishReason(result);
       if (reason === "MAX_TOKENS" || isLikelyTruncated(markdown)) {
@@ -130,7 +149,9 @@ export async function POST(request: NextRequest) {
           finish_reason: reason ?? "unknown",
           output_chars: markdown.length
         }));
-        result = await model.generateContent(buildSynthesisPrompt(body.query, queryMode, context, true, body.filters, body.locale));
+        result = await model.generateContent(
+          buildSynthesisPrompt(effectiveQuestion, queryMode, context, true, body.filters, body.locale, retrievalQuery)
+        );
         markdown = result.response.text();
         reason = finishReason(result);
       }
@@ -140,6 +161,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         withProvenance({
           markdown,
+          effectiveQuestion,
           sources: passages.map((passage, index) => ({ n: index + 1, passage }))
         }),
         { headers: { "x-perseus-data-source": dataSource() } }

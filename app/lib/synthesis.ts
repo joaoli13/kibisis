@@ -1,4 +1,5 @@
 import type { Passage, SearchFilters } from "./types";
+import { valuesForFilter } from "./filters";
 
 export type QueryMode = "question" | "topic";
 export type SynthesisLocale = "en" | "pt" | "es";
@@ -52,8 +53,8 @@ export function describeSynthesisFilters(filters?: SearchFilters): string {
   }
   return filterLabels
     .flatMap(([key, label]) => {
-      const value = filters[key]?.trim();
-      return value ? [`${label}: ${value}`] : [];
+      const values = valuesForFilter(filters[key]);
+      return values.length ? [`${label}: ${values.join(" OR ")}`] : [];
     })
     .join(" | ");
 }
@@ -64,7 +65,8 @@ export function buildSynthesisPrompt(
   context: string,
   retry = false,
   filters?: SearchFilters,
-  locale?: SynthesisLocale
+  locale?: SynthesisLocale,
+  retrievalQuery = ""
 ): string {
   const filterDescription = describeSynthesisFilters(filters);
   const localeInstruction = locale
@@ -86,12 +88,16 @@ export function buildSynthesisPrompt(
     queryMode === "question"
       ? "The user wrote a question. Try to answer it directly from the cited passages."
       : "The user wrote a topic or expression. Describe how that topic appears in the cited passages.",
+    retrievalQuery
+      ? "The retrieval query was used to find passages. Treat it as context about how the evidence was selected, but answer the explicit question below."
+      : "No separate retrieval query was supplied.",
     "Before drafting, infer the likely scope and evidence type requested by the query: literary representation, historical evidence, philosophical argument, rhetorical use, religious or normative discourse, motif, language, reception, or cross-genre comparison.",
     "Use the passage metadata, especially Genre, Period, Language, and Text type, to decide which passages are compatible with that scope.",
     "If the selected passages span different genres or evidence types, separate them explicitly instead of blending them into one undifferentiated claim.",
     "Do not present literary, poetic, dramatic, mythical, or fictional passages as evidence for historical fact unless the user explicitly asks about representation, reception, motif, language, or cross-genre comparison.",
     "Use out-of-scope genres only as explicitly marked comparison, or state briefly that the retrieved context is heterogeneous or insufficient for the requested claim.",
-    `Query: ${query}`,
+    `Answer question: ${query}`,
+    `Retrieval query: ${retrievalQuery || "none"}`,
     `Interface language: ${locale ? `${localeNames[locale]} (${locale})` : "unknown"}`,
     `User filter arguments: ${filterDescription || "none"}`,
     context

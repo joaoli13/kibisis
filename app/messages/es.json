@@ -12,6 +12,7 @@
   },
   "search": {
     "placeholder": "Busca ideas, escenas, autores u obras",
+    "retrievalPlaceholder": "Buscar pasajes sobre ideas, escenas, autores u obras",
     "button": "Buscar",
     "searching": "Buscando",
     "results": "{count} resultados",
@@ -38,6 +39,9 @@
     "noneSelected": "Ningun filtro activo.",
     "searchQuery": "Busqueda",
     "removeSuffix": "quitar",
+    "dashboardButton": "Dashboard",
+    "dashboardHint": "Usa el dashboard para explorar distribuciones y aplicar varios valores por dimensión.",
+    "dashboardTooltip": "Abre una vista gráfica del corpus. Las elecciones quedan en borrador hasta aplicarlas.",
     "fields": {
       "genre": "Genero",
       "author": "Autor",
@@ -106,6 +110,10 @@
     "answerWorkspace": "Espacio de respuesta",
     "backToMap": "Volver al mapa",
     "context": "Contexto",
+    "answerQuestion": "Pregunta para la respuesta",
+    "answerQuestionPlaceholder": "Escribe la pregunta que el modelo debe responder usando solo los pasajes seleccionados.",
+    "answerQuestionTooltip": "La busqueda recupera pasajes. Esta pregunta orienta la respuesta generada sobre el contexto seleccionado.",
+    "useSearchAsQuestion": "Usar busqueda como pregunta",
     "noAnswerYet": "Genera una respuesta desde los pasajes seleccionados para leerla aqui.",
     "sourcesUsed": "Fuentes utilizadas",
     "source": "Fuente",
@@ -184,6 +192,34 @@
         "cluster": "Cluster",
         "license": "Licencia"
       }
+  },
+  "filterDashboard": {
+    "eyebrow": "Recorte del corpus",
+    "title": "Dashboard de filtros",
+    "booleanHelp": "Dentro de una misma dimensión, cualquier valor seleccionado puede corresponder. Entre dimensiones diferentes, todos los criterios deben corresponder.",
+    "filtersTab": "Filtros",
+    "mapTab": "Mapa 3D",
+    "cancel": "Cancelar",
+    "apply": "Aplicar filtros",
+    "scopeTitle": "Qué valores listar",
+    "scopeHelp": "Compatibles: solo valores que coinciden con el recorte actual. Todo el corpus: todos los valores publicados, con los incompatibles señalados.",
+    "scope": {
+      "compatible": "Compatibles",
+      "corpus": "Todo el corpus"
+    },
+    "loading": "Actualizando",
+    "noOptions": "Ninguna opción disponible en este recorte.",
+    "outsideScope": "fuera del recorte actual",
+    "authorHelp": "Autores principales en el recorte; escribe para encontrar otros.",
+    "workHelp": "Obras buscables, priorizando el autor seleccionado cuando exista.",
+    "dimensionHelp": "Haz clic en uno o más valores para ampliar esta dimensión.",
+    "authorSearch": "Buscar autor",
+    "workSearch": "Buscar obra",
+    "clearDimension": "Limpiar dimensión",
+    "summary": "Resumen del borrador",
+    "works": "obras",
+    "tooltip": "Aplicar confirma el borrador en la pantalla principal. Cancelar descarta los cambios hechos aqui.",
+    "mapHelp": "El mapa conserva la jerarquia autor, obra y pasaje. Sigue respetando la carga ligera: autores por defecto, obras cuando hay autor, y pasajes solo con alcance."
   },
   "provenance": {
     "source": "Fuente",

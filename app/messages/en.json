@@ -12,6 +12,7 @@
   },
   "search": {
     "placeholder": "Search ideas, scenes, authors, or works",
+    "retrievalPlaceholder": "Retrieve passages about ideas, scenes, authors, or works",
     "button": "Search",
     "searching": "Searching",
     "results": "{count} results",
@@ -38,6 +39,9 @@
     "noneSelected": "No active filters.",
     "searchQuery": "Search",
     "removeSuffix": "remove",
+    "dashboardButton": "Dashboard",
+    "dashboardHint": "Use the dashboard to explore distributions and apply multiple values per dimension.",
+    "dashboardTooltip": "Open a graphical corpus view. Choices stay in draft until you apply them.",
     "fields": {
       "genre": "Genre",
       "author": "Author",
@@ -106,6 +110,10 @@
     "answerWorkspace": "Answer workspace",
     "backToMap": "Back to map",
     "context": "Context",
+    "answerQuestion": "Answer question",
+    "answerQuestionPlaceholder": "Write the question the model should answer using only the selected passages.",
+    "answerQuestionTooltip": "Search retrieves passages. This question guides the generated answer over the selected context.",
+    "useSearchAsQuestion": "Use search as question",
     "noAnswerYet": "Generate an answer from selected passages to read it here.",
     "sourcesUsed": "Sources used",
     "source": "Source",
@@ -184,6 +192,34 @@
         "cluster": "Cluster",
         "license": "License"
       }
+  },
+  "filterDashboard": {
+    "eyebrow": "Corpus scope",
+    "title": "Filter dashboard",
+    "booleanHelp": "Within one dimension, any selected value may match. Across different dimensions, all criteria must match.",
+    "filtersTab": "Filters",
+    "mapTab": "3D map",
+    "cancel": "Cancel",
+    "apply": "Apply filters",
+    "scopeTitle": "Which values to list",
+    "scopeHelp": "Compatible: only values that match the current scope. Whole corpus: every published value, with incompatible ones flagged.",
+    "scope": {
+      "compatible": "Compatible",
+      "corpus": "Whole corpus"
+    },
+    "loading": "Updating",
+    "noOptions": "No options available in this scope.",
+    "outsideScope": "outside current scope",
+    "authorHelp": "Top authors in scope; type to find others.",
+    "workHelp": "Searchable works, prioritizing the selected author when present.",
+    "dimensionHelp": "Click one or more values to broaden this dimension.",
+    "authorSearch": "Search author",
+    "workSearch": "Search work",
+    "clearDimension": "Clear dimension",
+    "summary": "Draft summary",
+    "works": "works",
+    "tooltip": "Apply commits the draft to the main screen. Cancel discards the changes made here.",
+    "mapHelp": "The map preserves the author, work, and passage hierarchy. It still follows lightweight loading rules: authors by default, works when an author is scoped, and passages only with scope."
   },
   "provenance": {
     "source": "Source",

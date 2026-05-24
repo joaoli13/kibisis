@@ -76,16 +76,32 @@ describe("synthesis prompt", () => {
 
   it("includes user filter arguments as language and scope hints", () => {
     const filters = {
-      genre: "tragédia",
+      genre: ["tragédia", "história"],
       work: "Medeia",
       language: "inglês"
     };
     const prompt = buildSynthesisPrompt("", "topic", "context", false, filters);
 
-    expect(describeSynthesisFilters(filters)).toBe("Genre: tragédia | Work: Medeia | Language: inglês");
+    expect(describeSynthesisFilters(filters)).toBe("Genre: tragédia OR história | Work: Medeia | Language: inglês");
     expect(prompt).toContain("use the user's filter arguments as language hints");
     expect(prompt).toContain("Treat user filter arguments as language and scope hints only");
-    expect(prompt).toContain("User filter arguments: Genre: tragédia | Work: Medeia | Language: inglês");
+    expect(prompt).toContain("User filter arguments: Genre: tragédia OR história | Work: Medeia | Language: inglês");
+  });
+
+  it("distinguishes retrieval text from the explicit answer question", () => {
+    const prompt = buildSynthesisPrompt(
+      "What moral obligations are shown?",
+      "question",
+      "context",
+      false,
+      undefined,
+      "en",
+      "hospitality in the Odyssey"
+    );
+
+    expect(prompt).toContain("Retrieval query: hospitality in the Odyssey");
+    expect(prompt).toContain("Answer question: What moral obligations are shown?");
+    expect(prompt).toContain("answer the explicit question below");
   });
 
   it("uses interface locale for proper names and ambiguous search terms", () => {

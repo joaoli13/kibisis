@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { firstFilterValue, onlyFilterValue, setFilterValue } from "@/lib/filters";
 import { hasPassageNodeScope } from "@/lib/search-behavior";
 import { useAtlasStore } from "@/stores/atlas";
 import type { Passage, SemanticNode } from "@/lib/types";
@@ -211,14 +212,16 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
     return new Map(entries);
   }, [nodes]);
   const activePassageId = passageIdForNode(activeMapNode);
+  const selectedAuthor = onlyFilterValue(filters.author);
+  const selectedWork = onlyFilterValue(filters.work);
 
   useEffect(() => {
-    if (granularity === "author" && filters.author) {
+    if (granularity === "author" && selectedAuthor) {
       setGranularity("work");
       setActiveMapNode(null);
       selectPassage(null);
     }
-  }, [filters.author, granularity, selectPassage, setGranularity]);
+  }, [granularity, selectPassage, selectedAuthor, setGranularity]);
 
   useEffect(() => {
     function showMapPassage(event: Event) {
@@ -449,14 +452,14 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
       }
       if (node.level === "author" && node.author_id) {
         setActiveMapNode(null);
-        setFilters({ ...filters, author: node.author_id, work: undefined });
+        setFilters(setFilterValue(filters, "author", node.author_id));
         setGranularity("work");
         selectPassage(null);
         return;
       }
       if (node.level === "work" && node.work_id) {
         setActiveMapNode(null);
-        setFilters({ ...filters, author: node.author_id ?? filters.author, work: node.work_id });
+        setFilters(setFilterValue({ ...filters, author: node.author_id ?? firstFilterValue(filters.author) }, "work", node.work_id));
         setGranularity("passage");
         selectPassage(null);
         return;
@@ -487,12 +490,12 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
     [activeQuery, filters, selectPassage, setFilters, setGranularity, setPassageScopePrompt]
   );
   const authorLabel = useMemo(
-    () => visible.find((node) => node.author_id === filters.author)?.author_label ?? filters.author,
-    [filters.author, visible]
+    () => visible.find((node) => node.author_id === selectedAuthor)?.author_label ?? selectedAuthor,
+    [selectedAuthor, visible]
   );
   const workLabel = useMemo(
-    () => visible.find((node) => node.work_id === filters.work)?.work_label ?? filters.work,
-    [filters.work, visible]
+    () => visible.find((node) => node.work_id === selectedWork)?.work_label ?? selectedWork,
+    [selectedWork, visible]
   );
   const openPassageText = useCallback(() => {
     if (!activePassageId) {
@@ -537,7 +540,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
             <button className="hover:text-[var(--accent)]" onClick={() => chooseLevel("author")} type="button">
               {t("allAuthors")}
             </button>
-            {filters.author ? (
+            {selectedAuthor ? (
               <>
                 <span>/</span>
                 <button className="max-w-40 truncate hover:text-[var(--accent)]" onClick={() => chooseLevel("work")} type="button">
@@ -545,7 +548,7 @@ export function Canvas3D({ compact = false }: Canvas3DProps) {
                 </button>
               </>
             ) : null}
-            {filters.work ? (
+            {selectedWork ? (
               <>
                 <span>/</span>
                 <span className="max-w-40 truncate">{workLabel}</span>

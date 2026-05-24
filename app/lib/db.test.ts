@@ -39,6 +39,7 @@ describe("postgres data source", () => {
     expect(shouldPreferEnglishTranslations({})).toBe(true);
     expect(shouldPreferEnglishTranslations({ author: "Homer" })).toBe(true);
     expect(shouldPreferEnglishTranslations({ language: "grc" })).toBe(false);
+    expect(shouldPreferEnglishTranslations({ language: ["grc", "lat"] })).toBe(false);
     expect(shouldPreferEnglishTranslations({ textType: "original" })).toBe(false);
     expect(englishTranslationSearchFilters({ author: "Homer" })).toEqual({
       author: "Homer",

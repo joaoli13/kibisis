@@ -1,4 +1,5 @@
 import type { SearchFilters } from "./types";
+import { hasAnyMetadataFilter, valuesForFilter } from "./filters";
 
 type PassageNodeScopeOptions = {
   cursor?: string | null;
@@ -11,7 +12,7 @@ export function hasTextSearch(query: string): boolean {
 }
 
 export function hasMetadataScope(filters: SearchFilters): boolean {
-  return Object.values(filters).some(Boolean);
+  return hasAnyMetadataFilter(filters);
 }
 
 export function hasPassageNodeScope(
@@ -20,9 +21,9 @@ export function hasPassageNodeScope(
   options: PassageNodeScopeOptions = {}
 ): boolean {
   return Boolean(
-    hasTextSearch(query) ||
-      filters.author ||
-      filters.work ||
+      hasTextSearch(query) ||
+      valuesForFilter(filters.author).length ||
+      valuesForFilter(filters.work).length ||
       options.cursor ||
       options.page ||
       options.overview === "sample"

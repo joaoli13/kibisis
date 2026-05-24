@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAtlasStore } from "@/stores/atlas";
+import { appendFiltersToParams } from "@/lib/filters";
 import { hasPassageNodeScope, hasTextSearch } from "@/lib/search-behavior";
 import type { SearchResult, SemanticNode } from "@/lib/types";
 
@@ -46,11 +47,7 @@ export function SearchBar() {
       setPassageScopePrompt(false);
       setBusy(true);
       const params = new URLSearchParams({ q: activeQuery, nodeLevel: granularity });
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          params.set(key, value);
-        }
-      });
+      appendFiltersToParams(params, filters);
       const response = await fetch(`/api/search?${params.toString()}`);
       const payload = (await response.json()) as SearchResponse;
       setResults(hasActiveSearch ? payload.results ?? [] : []);
@@ -88,7 +85,7 @@ export function SearchBar() {
           <input
             className="h-10 min-w-0 flex-1 border border-[var(--line)] bg-white px-3 text-sm"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("placeholder")}
+            placeholder={t("retrievalPlaceholder")}
             value={query}
           />
           <button

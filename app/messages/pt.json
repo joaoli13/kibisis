@@ -12,6 +12,7 @@
   },
   "search": {
     "placeholder": "Pesquise ideias, cenas, autores ou obras",
+    "retrievalPlaceholder": "Buscar trechos sobre ideias, cenas, autores ou obras",
     "button": "Buscar",
     "searching": "Buscando",
     "results": "{count} resultados",
@@ -38,6 +39,9 @@
     "noneSelected": "Nenhum filtro ativo.",
     "searchQuery": "Pesquisa",
     "removeSuffix": "remover",
+    "dashboardButton": "Dashboard",
+    "dashboardHint": "Use o dashboard para explorar distribuições e aplicar múltiplos valores por dimensão.",
+    "dashboardTooltip": "Abra uma visão gráfica do corpus. As escolhas ficam em rascunho até você aplicar.",
     "fields": {
       "genre": "Gênero",
       "author": "Autor",
@@ -106,6 +110,10 @@
     "answerWorkspace": "Espaço de resposta",
     "backToMap": "Voltar ao mapa",
     "context": "Contexto",
+    "answerQuestion": "Pergunta para a resposta",
+    "answerQuestionPlaceholder": "Escreva a pergunta que o modelo deve responder usando apenas os trechos selecionados.",
+    "answerQuestionTooltip": "A busca recupera trechos. Esta pergunta orienta a resposta gerada sobre o contexto selecionado.",
+    "useSearchAsQuestion": "Usar busca como pergunta",
     "noAnswerYet": "Gere uma resposta a partir dos trechos selecionados para lê-la aqui.",
     "sourcesUsed": "Fontes utilizadas",
     "source": "Fonte",
@@ -184,6 +192,34 @@
         "cluster": "Cluster",
         "license": "Licença"
       }
+  },
+  "filterDashboard": {
+    "eyebrow": "Recorte do corpus",
+    "title": "Dashboard de filtros",
+    "booleanHelp": "Dentro de uma mesma dimensão, qualquer valor selecionado pode corresponder. Entre dimensões diferentes, todos os critérios precisam corresponder.",
+    "filtersTab": "Filtros",
+    "mapTab": "Mapa 3D",
+    "cancel": "Cancelar",
+    "apply": "Aplicar filtros",
+    "scopeTitle": "Quais valores listar",
+    "scopeHelp": "Compatíveis: apenas valores que combinam com o recorte atual. Todo o corpus: todos os valores publicados, com os incompatíveis sinalizados.",
+    "scope": {
+      "compatible": "Compatíveis",
+      "corpus": "Todo o corpus"
+    },
+    "loading": "Atualizando",
+    "noOptions": "Nenhuma opção disponível neste recorte.",
+    "outsideScope": "fora do recorte atual",
+    "authorHelp": "Top autores no recorte; digite para encontrar outros.",
+    "workHelp": "Obras buscáveis, priorizando o autor selecionado quando houver.",
+    "dimensionHelp": "Clique em um ou mais valores para ampliar esta dimensão.",
+    "authorSearch": "Buscar autor",
+    "workSearch": "Buscar obra",
+    "clearDimension": "Limpar dimensão",
+    "summary": "Resumo do rascunho",
+    "works": "obras",
+    "tooltip": "Aplicar confirma o rascunho na tela principal. Cancelar descarta as alterações feitas aqui.",
+    "mapHelp": "O mapa preserva a hierarquia autor, obra e passagem. Ele continua respeitando as regras de carregamento leve: autores por padrão, obras quando houver autor, e trechos apenas com escopo."
   },
   "provenance": {
     "source": "Fonte",

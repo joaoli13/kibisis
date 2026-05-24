@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { loadEnvConfig } from "@next/env";
 import { resolve } from "node:path";
 import { Pool, type PoolClient } from "pg";
+import { filterHasValue, normalizeSearchFilters, valuesForFilter } from "./filters";
 import type { FacetOption, MetadataFacets, NodeLevel, Passage, SearchFilters, SearchResult, SemanticNode } from "./types";
 
 let pool: Pool | undefined;
@@ -138,12 +139,13 @@ function mergeCandidate(
   target.set(id, { score, evidence: [evidence] });
 }
 
-function addTextSqlFilter(where: string[], values: unknown[], expression: string, value: string | undefined) {
-  if (!value) {
+function addTextSqlFilter(where: string[], values: unknown[], expression: string, value: SearchFilters[keyof SearchFilters]) {
+  const filterValues = valuesForFilter(value);
+  if (!filterValues.length) {
     return;
   }
-  values.push(value);
-  where.push(`${expression} ILIKE '%' || $${values.length} || '%'`);
+  values.push(filterValues);
+  where.push(`EXISTS (SELECT 1 FROM unnest($${values.length}::text[]) AS f(value) WHERE ${expression} ILIKE '%' || f.value || '%')`);
 }
 
 function addPassageSqlFilters(
@@ -154,17 +156,19 @@ function addPassageSqlFilters(
   authorAlias = "a",
   workAlias = "w"
 ) {
-  if (filters.author) {
-    values.push(filters.author);
+  const authorValues = valuesForFilter(filters.author);
+  if (authorValues.length) {
+    values.push(authorValues);
     const index = values.length;
     where.push(
-      `(${passageAlias}.author_id = $${index} OR ${authorAlias}.name ILIKE '%' || $${index} || '%' OR $${index} = ANY(${authorAlias}.name_variants))`
+      `EXISTS (SELECT 1 FROM unnest($${index}::text[]) AS f(value) WHERE ${passageAlias}.author_id = f.value OR ${authorAlias}.name ILIKE '%' || f.value || '%' OR f.value = ANY(${authorAlias}.name_variants))`
     );
   }
-  if (filters.work) {
-    values.push(filters.work);
+  const workValues = valuesForFilter(filters.work);
+  if (workValues.length) {
+    values.push(workValues);
     const index = values.length;
-    where.push(`(${passageAlias}.work_id = $${index} OR ${workAlias}.title ILIKE '%' || $${index} || '%')`);
+    where.push(`EXISTS (SELECT 1 FROM unnest($${index}::text[]) AS f(value) WHERE ${passageAlias}.work_id = f.value OR ${workAlias}.title ILIKE '%' || f.value || '%')`);
   }
   addTextSqlFilter(where, values, `${passageAlias}.genre`, filters.genre);
   addTextSqlFilter(where, values, `${passageAlias}.period`, filters.period);
@@ -173,7 +177,12 @@ function addPassageSqlFilters(
 }
 
 function hasPassageMetadataFilters(filters: SearchFilters): boolean {
-  return Boolean(filters.genre || filters.period || filters.language || filters.textType);
+  return Boolean(
+    valuesForFilter(filters.genre).length ||
+      valuesForFilter(filters.period).length ||
+      valuesForFilter(filters.language).length ||
+      valuesForFilter(filters.textType).length
+  );
 }
 
 function addNodePassageMetadataScope(
@@ -222,25 +231,27 @@ function addNodeSqlFilters(
   authorAlias = "a",
   workAlias = "w"
 ) {
-  if (filters.author) {
-    values.push(filters.author);
+  const authorValues = valuesForFilter(filters.author);
+  if (authorValues.length) {
+    values.push(authorValues);
     const index = values.length;
     where.push(
-      `(${nodeAlias}.author_id = $${index} OR ${authorAlias}.name ILIKE '%' || $${index} || '%' OR $${index} = ANY(${authorAlias}.name_variants))`
+      `EXISTS (SELECT 1 FROM unnest($${index}::text[]) AS f(value) WHERE ${nodeAlias}.author_id = f.value OR ${authorAlias}.name ILIKE '%' || f.value || '%' OR f.value = ANY(${authorAlias}.name_variants))`
     );
   }
-  if (filters.work) {
-    values.push(filters.work);
+  const workValues = valuesForFilter(filters.work);
+  if (workValues.length) {
+    values.push(workValues);
     const index = values.length;
     where.push(
-      `(${nodeAlias}.work_id = $${index} OR ${workAlias}.title ILIKE '%' || $${index} || '%' OR (${nodeAlias}.level = 'author' AND EXISTS (SELECT 1 FROM works matched_work WHERE matched_work.author_id = ${nodeAlias}.author_id AND (matched_work.id = $${index} OR matched_work.title ILIKE '%' || $${index} || '%'))))`
+      `EXISTS (SELECT 1 FROM unnest($${index}::text[]) AS f(value) WHERE ${nodeAlias}.work_id = f.value OR ${workAlias}.title ILIKE '%' || f.value || '%' OR (${nodeAlias}.level = 'author' AND EXISTS (SELECT 1 FROM works matched_work WHERE matched_work.author_id = ${nodeAlias}.author_id AND (matched_work.id = f.value OR matched_work.title ILIKE '%' || f.value || '%'))))`
     );
   }
   addNodePassageMetadataScope(where, values, filters, nodeAlias);
 }
 
 export function shouldPreferEnglishTranslations(filters: SearchFilters): boolean {
-  return !filters.language && !filters.textType;
+  return !valuesForFilter(filters.language).length && !valuesForFilter(filters.textType).length;
 }
 
 export function englishTranslationSearchFilters(filters: SearchFilters): SearchFilters {
@@ -420,55 +431,124 @@ function filtersWithout(filters: SearchFilters, key: keyof SearchFilters): Searc
   return { ...filters, [key]: undefined };
 }
 
-export async function getMetadataFacets(filters: SearchFilters = {}): Promise<MetadataFacets> {
+type MetadataFacetOptions = {
+  dashboard?: boolean;
+  scope?: "compatible" | "corpus";
+  facet?: keyof MetadataFacets;
+  facetQuery?: string;
+  limit?: number;
+};
+
+function markFacetOptions(
+  rows: FacetOption[],
+  compatibleIds: Set<string>,
+  filters: SearchFilters,
+  key: keyof SearchFilters
+): FacetOption[] {
+  return rows.map((option) => ({
+    ...option,
+    selected: filterHasValue(filters, key, option.id),
+    compatible: compatibleIds.has(option.id)
+  }));
+}
+
+export async function getMetadataFacets(filters: SearchFilters = {}, options: MetadataFacetOptions = {}): Promise<MetadataFacets> {
+  const normalizedFilters = normalizeSearchFilters(filters);
+  const dashboard = Boolean(options.dashboard);
+  const scope = options.scope ?? "compatible";
+  const topLimit = Math.min(Math.max(Math.floor(options.limit ?? 20), 1), 100);
+  const facetQuery = options.facetQuery?.trim();
   const scoped = (key: keyof SearchFilters) => {
     const values: unknown[] = [];
     const where = ["p.license_status = 'cc_compatible'"];
-    addPassageSqlFilters(where, values, filtersWithout(filters, key));
+    addPassageSqlFilters(where, values, filtersWithout(normalizedFilters, key));
     return { where: where.join(" AND "), values };
   };
+  const corpus = () => ({ where: "p.license_status = 'cc_compatible'", values: [] as unknown[] });
   const authorScope = scoped("author");
   const workScope = scoped("work");
   const genreScope = scoped("genre");
   const periodScope = scoped("period");
   const languageScope = scoped("language");
   const textTypeScope = scoped("textType");
+  function addFacetQuery(scope: { where: string; values: unknown[] }, expression: "a.name" | "w.title") {
+    if (!facetQuery) {
+      return scope;
+    }
+    return {
+      where: `${scope.where} AND ${expression} ILIKE '%' || $${scope.values.length + 1} || '%'`,
+      values: [...scope.values, facetQuery]
+    };
+  }
 
-  const [authors, works, genres, periods, languages, textTypes] = await Promise.all([
-    getPool().query<FacetOption>(`
+  const authorResultScope = dashboard && scope === "corpus" ? corpus() : authorScope;
+  const workResultScope = dashboard && scope === "corpus" ? corpus() : workScope;
+  const genreResultScope = dashboard && scope === "corpus" ? corpus() : genreScope;
+  const periodResultScope = dashboard && scope === "corpus" ? corpus() : periodScope;
+  const languageResultScope = dashboard && scope === "corpus" ? corpus() : languageScope;
+  const textTypeResultScope = dashboard && scope === "corpus" ? corpus() : textTypeScope;
+
+  const compatibleFacetsPromise =
+    dashboard && scope === "corpus"
+      ? getMetadataFacets(normalizedFilters, { dashboard: false })
+      : Promise.resolve<MetadataFacets>({
+          authors: [],
+          works: [],
+          genres: [],
+          periods: [],
+          languages: [],
+          textTypes: []
+        });
+
+  const authorLimited = dashboard ? `LIMIT ${topLimit}` : "";
+  const workLimited = dashboard ? `LIMIT ${topLimit}` : "";
+  const selectedFacet = options.facet;
+  const emptyFacets: MetadataFacets = { authors: [], works: [], genres: [], periods: [], languages: [], textTypes: [] };
+
+  function shouldFetch(facet: keyof MetadataFacets) {
+    return !selectedFacet || selectedFacet === facet;
+  }
+
+  const authorScopeForQuery = addFacetQuery(authorResultScope, "a.name");
+  const workScopeForQuery = addFacetQuery(workResultScope, "w.title");
+
+  const [authors, works, genres, periods, languages, textTypes, compatibleFacets] = await Promise.all([
+    shouldFetch("authors") ? getPool().query<FacetOption>(`
       SELECT a.id, a.name AS label, count(DISTINCT n.id)::int AS count
       FROM authors a
       JOIN published_passages p ON p.author_id = a.id
       JOIN works w ON w.id = p.work_id
-      WHERE ${authorScope.where}
+      WHERE ${authorScopeForQuery.where}
       GROUP BY a.id, a.name
-      ORDER BY a.name
-    `.replace("count(DISTINCT n.id)::int", "count(DISTINCT p.work_id)::int"), authorScope.values),
-    getPool().query<FacetOption>(`
+      ORDER BY ${dashboard ? "count DESC, a.name" : "a.name"}
+      ${authorLimited}
+    `.replace("count(DISTINCT n.id)::int", "count(DISTINCT p.work_id)::int"), authorScopeForQuery.values) : Promise.resolve({ rows: emptyFacets.authors }),
+    shouldFetch("works") ? getPool().query<FacetOption>(`
       SELECT w.id, w.title AS label, w.author_id, count(DISTINCT n.id)::int AS count
       FROM works w
       JOIN published_passages p ON p.work_id = w.id
       JOIN authors a ON a.id = p.author_id
       LEFT JOIN published_nodes n ON n.work_id = w.id AND n.level = 'work'
-      WHERE ${workScope.where}
+      WHERE ${workScopeForQuery.where}
       GROUP BY w.id, w.title, w.author_id
       ORDER BY w.title
-    `, workScope.values),
-    getPool().query<FacetOption>(`
+      ${workLimited}
+    `, workScopeForQuery.values) : Promise.resolve({ rows: emptyFacets.works }),
+    shouldFetch("genres") ? getPool().query<FacetOption>(`
       SELECT p.genre AS id, p.genre AS label, count(DISTINCT p.work_id)::int AS count
       FROM published_passages p
       JOIN authors a ON a.id = p.author_id
       JOIN works w ON w.id = p.work_id
-      WHERE p.genre IS NOT NULL AND ${genreScope.where}
+      WHERE p.genre IS NOT NULL AND ${genreResultScope.where}
       GROUP BY p.genre
       ORDER BY p.genre
-    `, genreScope.values),
-    getPool().query<FacetOption>(`
+    `, genreResultScope.values) : Promise.resolve({ rows: emptyFacets.genres }),
+    shouldFetch("periods") ? getPool().query<FacetOption>(`
       SELECT p.period AS id, p.period AS label, count(*)::int AS count
       FROM published_passages p
       JOIN authors a ON a.id = p.author_id
       JOIN works w ON w.id = p.work_id
-      WHERE p.period IS NOT NULL AND ${periodScope.where}
+      WHERE p.period IS NOT NULL AND ${periodResultScope.where}
       GROUP BY p.period
       ORDER BY CASE lower(p.period)
         WHEN 'archaic' THEN 1
@@ -477,34 +557,50 @@ export async function getMetadataFacets(filters: SearchFilters = {}): Promise<Me
         WHEN 'roman' THEN 4
         ELSE 99
       END, p.period
-    `, periodScope.values),
-    getPool().query<FacetOption>(`
+    `, periodResultScope.values) : Promise.resolve({ rows: emptyFacets.periods }),
+    shouldFetch("languages") ? getPool().query<FacetOption>(`
       SELECT p.language AS id, p.language AS label, count(*)::int AS count
       FROM published_passages p
       JOIN authors a ON a.id = p.author_id
       JOIN works w ON w.id = p.work_id
-      WHERE p.language IS NOT NULL AND ${languageScope.where}
+      WHERE p.language IS NOT NULL AND ${languageResultScope.where}
       GROUP BY p.language
       ORDER BY p.language
-    `, languageScope.values),
-    getPool().query<FacetOption>(`
+    `, languageResultScope.values) : Promise.resolve({ rows: emptyFacets.languages }),
+    shouldFetch("textTypes") ? getPool().query<FacetOption>(`
       SELECT p.text_type AS id, p.text_type AS label, count(*)::int AS count
       FROM published_passages p
       JOIN authors a ON a.id = p.author_id
       JOIN works w ON w.id = p.work_id
-      WHERE p.text_type IS NOT NULL AND ${textTypeScope.where}
+      WHERE p.text_type IS NOT NULL AND ${textTypeResultScope.where}
       GROUP BY p.text_type
       ORDER BY p.text_type
-    `, textTypeScope.values)
+    `, textTypeResultScope.values) : Promise.resolve({ rows: emptyFacets.textTypes }),
+    compatibleFacetsPromise
   ]);
 
-  return {
+  const rawFacets = {
     authors: authors.rows,
     works: works.rows,
     genres: genres.rows,
     periods: periods.rows,
     languages: languages.rows,
     textTypes: textTypes.rows
+  };
+
+  if (!dashboard) {
+    return rawFacets;
+  }
+
+  const compatibilitySource = scope === "corpus" ? compatibleFacets : rawFacets;
+
+  return {
+    authors: markFacetOptions(rawFacets.authors, new Set(compatibilitySource.authors.map((option) => option.id)), normalizedFilters, "author"),
+    works: markFacetOptions(rawFacets.works, new Set(compatibilitySource.works.map((option) => option.id)), normalizedFilters, "work"),
+    genres: markFacetOptions(rawFacets.genres, new Set(compatibilitySource.genres.map((option) => option.id)), normalizedFilters, "genre"),
+    periods: markFacetOptions(rawFacets.periods, new Set(compatibilitySource.periods.map((option) => option.id)), normalizedFilters, "period"),
+    languages: markFacetOptions(rawFacets.languages, new Set(compatibilitySource.languages.map((option) => option.id)), normalizedFilters, "language"),
+    textTypes: markFacetOptions(rawFacets.textTypes, new Set(compatibilitySource.textTypes.map((option) => option.id)), normalizedFilters, "textType")
   };
 }
 

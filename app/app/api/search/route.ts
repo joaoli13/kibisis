@@ -7,24 +7,14 @@ import {
   isDatabaseConfigurationError,
   searchPassages
 } from "@/lib/db";
+import { readFiltersFromSearchParams } from "@/lib/filters";
 import { logRequest } from "@/lib/logger";
 import { withProvenance } from "@/lib/provenance";
 import { rateLimit } from "@/lib/rate-limit";
 import { hasPassageNodeScope, hasTextSearch } from "@/lib/search-behavior";
-import type { NodeLevel, SearchFilters } from "@/lib/types";
+import type { NodeLevel } from "@/lib/types";
 
 const nodeLevels = new Set<NodeLevel>(["author", "work", "passage"]);
-
-function readFilters(url: URL): SearchFilters {
-  return {
-    author: url.searchParams.get("author") ?? undefined,
-    work: url.searchParams.get("work") ?? undefined,
-    genre: url.searchParams.get("genre") ?? undefined,
-    period: url.searchParams.get("period") ?? undefined,
-    language: url.searchParams.get("language") ?? undefined,
-    textType: url.searchParams.get("textType") ?? undefined
-  };
-}
 
 function readNodeLevel(url: URL): NodeLevel {
   const value = url.searchParams.get("nodeLevel");
@@ -41,7 +31,7 @@ export async function GET(request: NextRequest) {
   const query = url.searchParams.get("q") ?? "";
   const limit = Number(url.searchParams.get("limit") ?? "20");
   const nodeLevel = readNodeLevel(url);
-  const filters = readFilters(url);
+  const filters = readFiltersFromSearchParams(url.searchParams);
   const shouldSearch = hasTextSearch(query);
   const passageScopeOptions = {
     cursor: url.searchParams.get("cursor"),

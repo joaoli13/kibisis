@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dataSource, getMetadataFacets, isDatabaseConfigurationError } from "@/lib/db";
+import { readFiltersFromSearchParams } from "@/lib/filters";
 import { withProvenance } from "@/lib/provenance";
-import type { SearchFilters } from "@/lib/types";
-
-function readFilters(url: URL): SearchFilters {
-  return {
-    author: url.searchParams.get("author") ?? undefined,
-    work: url.searchParams.get("work") ?? undefined,
-    genre: url.searchParams.get("genre") ?? undefined,
-    period: url.searchParams.get("period") ?? undefined,
-    language: url.searchParams.get("language") ?? undefined,
-    textType: url.searchParams.get("textType") ?? undefined
-  };
-}
 
 export async function GET(request: NextRequest) {
   try {
-    const facets = await getMetadataFacets(readFilters(new URL(request.url)));
+    const url = new URL(request.url);
+    const facet = url.searchParams.get("facet") ?? undefined;
+    const facets = await getMetadataFacets(readFiltersFromSearchParams(url.searchParams), {
+      dashboard: url.searchParams.get("dashboard") === "true",
+      scope: url.searchParams.get("scope") === "corpus" ? "corpus" : "compatible",
+      facet: facet === "author" ? "authors" : facet === "work" ? "works" : facet === "genre" ? "genres" : facet === "period" ? "periods" : facet === "language" ? "languages" : facet === "textType" ? "textTypes" : undefined,
+      facetQuery: url.searchParams.get("facetQuery") ?? undefined,
+      limit: Number(url.searchParams.get("limit") ?? "20")
+    });
     return NextResponse.json(withProvenance({ facets }), {
       headers: { "x-perseus-data-source": dataSource() }
     });
