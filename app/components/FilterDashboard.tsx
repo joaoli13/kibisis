@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Canvas3D } from "@/components/Canvas3D";
 import {
   appendFiltersToParams,
@@ -11,10 +11,11 @@ import {
   toggleFilterValue,
   valuesForFilter
 } from "@/lib/filters";
-import type { FacetOption, MetadataFacets, SearchFilters } from "@/lib/types";
+import type { FacetOption, MetadataFacets, MetadataSummary, SearchFilters } from "@/lib/types";
 
 type MetadataResponse = {
   facets: MetadataFacets;
+  summary?: MetadataSummary;
 };
 
 type FilterDashboardProps = {
@@ -32,6 +33,12 @@ const emptyFacets: MetadataFacets = {
   periods: [],
   languages: [],
   textTypes: []
+};
+
+const emptySummary: MetadataSummary = {
+  authors_count: 0,
+  works_count: 0,
+  passages_count: 0
 };
 
 const facetGroups: Array<{
@@ -57,13 +64,16 @@ function optionCount(option: FacetOption) {
 
 export function FilterDashboard({ facets, filters, onApply, onClose, translateOption }: FilterDashboardProps) {
   const t = useTranslations();
+  const locale = useLocale();
   const [draft, setDraft] = useState<SearchFilters>(() => normalizeSearchFilters(filters));
   const [scope, setScope] = useState<"compatible" | "corpus">("compatible");
   const [authorQuery, setAuthorQuery] = useState("");
   const [workQuery, setWorkQuery] = useState("");
   const [dashboardFacets, setDashboardFacets] = useState<MetadataFacets>(facets);
+  const [dashboardSummary, setDashboardSummary] = useState<MetadataSummary>(emptySummary);
   const [busy, setBusy] = useState(false);
   const [view, setView] = useState<"filters" | "map">("filters");
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,10 +91,12 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
         const payload = (await response.json()) as MetadataResponse;
         if (!cancelled) {
           setDashboardFacets(payload.facets ?? emptyFacets);
+          setDashboardSummary(payload.summary ?? emptySummary);
         }
       } catch (error) {
         if (!cancelled) {
           setDashboardFacets(emptyFacets);
+          setDashboardSummary(emptySummary);
         }
       } finally {
         if (!cancelled) {
@@ -108,11 +120,6 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
       ),
     [dashboardFacets, draft, t, translateOption]
   );
-  const totalWorks = useMemo(() => {
-    const source = dashboardFacets.authors.length ? dashboardFacets.authors : facets.authors;
-    return source.reduce((sum, option) => sum + optionCount(option), 0);
-  }, [dashboardFacets.authors, facets.authors]);
-  const totalPassageProxy = useMemo(() => dashboardFacets.genres.reduce((sum, option) => sum + optionCount(option), 0), [dashboardFacets.genres]);
 
   function toggle(key: keyof SearchFilters, value: string) {
     setDraft((current) => toggleFilterValue(current, key, value));
@@ -275,7 +282,9 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
                 <section className="border border-[var(--line)] bg-[var(--surface-muted)] p-3">
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-700">{t("filterDashboard.summary")}</h3>
                   <div className="mt-2 text-sm text-neutral-600">
-                    {totalWorks} {t("filterDashboard.works")} · {totalPassageProxy} {t("resultsPanel.passages")}
+                    {numberFormatter.format(dashboardSummary.authors_count)} {t("filterDashboard.authors")} ·{" "}
+                    {numberFormatter.format(dashboardSummary.works_count)} {t("filterDashboard.works")} ·{" "}
+                    {numberFormatter.format(dashboardSummary.passages_count)} {t("resultsPanel.passages")}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {selectedItems.map((item) => (

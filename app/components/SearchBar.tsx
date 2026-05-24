@@ -4,7 +4,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAtlasStore } from "@/stores/atlas";
 import { appendFiltersToParams } from "@/lib/filters";
-import { hasPassageNodeScope, hasTextSearch } from "@/lib/search-behavior";
+import { hasPassageNodeScope, hasTextSearch, shouldAutoOpenPassageMap } from "@/lib/search-behavior";
 import type { SearchResult, SemanticNode } from "@/lib/types";
 
 type SearchResponse = {
@@ -22,6 +22,7 @@ export function SearchBar() {
   const setActiveQuery = useAtlasStore((state) => state.setActiveQuery);
   const setResults = useAtlasStore((state) => state.setResults);
   const setNodes = useAtlasStore((state) => state.setNodes);
+  const setGranularity = useAtlasStore((state) => state.setGranularity);
   const setMapMode = useAtlasStore((state) => state.setMapMode);
   const setPassageScopePrompt = useAtlasStore((state) => state.setPassageScopePrompt);
   const selectPassage = useAtlasStore((state) => state.selectPassage);
@@ -50,10 +51,14 @@ export function SearchBar() {
       appendFiltersToParams(params, filters);
       const response = await fetch(`/api/search?${params.toString()}`);
       const payload = (await response.json()) as SearchResponse;
-      setResults(hasActiveSearch ? payload.results ?? [] : []);
+      const nextResults = hasActiveSearch ? payload.results ?? [] : [];
+      setResults(nextResults);
       setNodes(payload.nodes ?? []);
       setMapMode(hasActiveSearch ? "isolate" : "highlight");
-      selectPassage(hasActiveSearch ? payload.results?.[0]?.id ?? null : null);
+      selectPassage(hasActiveSearch ? nextResults[0]?.id ?? null : null);
+      if (hasActiveSearch && granularity !== "passage" && shouldAutoOpenPassageMap(nextResults)) {
+        setGranularity("passage");
+      }
       setBusy(false);
     }, 250);
     return () => window.clearTimeout(handle);
@@ -66,7 +71,8 @@ export function SearchBar() {
     setMapMode,
     setNodes,
     setPassageScopePrompt,
-    setResults
+    setResults,
+    setGranularity
   ]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {

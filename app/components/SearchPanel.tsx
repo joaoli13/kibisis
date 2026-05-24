@@ -14,10 +14,12 @@ import {
   valuesForFilter
 } from "@/lib/filters";
 import { hasTextSearch } from "@/lib/search-behavior";
-import type { FacetOption, MetadataFacets, SearchFilters } from "@/lib/types";
+import type { FacetOption, MetadataFacets, MetadataSummary, SearchFilters } from "@/lib/types";
 
 type MetadataResponse = {
   facets: MetadataFacets;
+  summary?: MetadataSummary;
+  totalSummary?: MetadataSummary;
 };
 
 const emptyFacets: MetadataFacets = {
@@ -146,6 +148,7 @@ export function SearchPanel() {
   const setFilters = useAtlasStore((state) => state.setFilters);
   const setPassageScopePrompt = useAtlasStore((state) => state.setPassageScopePrompt);
   const setResults = useAtlasStore((state) => state.setResults);
+  const setMetadataSummary = useAtlasStore((state) => state.setMetadataSummary);
   const selectPassage = useAtlasStore((state) => state.selectPassage);
   const [facets, setFacets] = useState<MetadataFacets>(emptyFacets);
   const [dashboardOpen, setDashboardOpen] = useState(false);
@@ -154,12 +157,15 @@ export function SearchPanel() {
     let cancelled = false;
     async function loadMetadata() {
       const params = new URLSearchParams();
+      params.set("summary", "true");
+      params.set("totalSummary", "true");
       appendFiltersToParams(params, filters);
       const response = await fetch(`/api/metadata?${params.toString()}`);
       const payload = (await response.json()) as MetadataResponse;
       if (!cancelled) {
         const nextFacets = payload.facets ?? emptyFacets;
         setFacets(nextFacets);
+        setMetadataSummary(payload.summary ?? null, payload.totalSummary ?? payload.summary ?? null);
         const nextFilters = normalizeFilters(filters, nextFacets);
         if (!filtersEqual(filters, nextFilters)) {
           setFilters(nextFilters);
@@ -169,12 +175,13 @@ export function SearchPanel() {
     loadMetadata().catch(() => {
       if (!cancelled) {
         setFacets(emptyFacets);
+        setMetadataSummary(null, null);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [filters, setFilters]);
+  }, [filters, setFilters, setMetadataSummary]);
 
   const authorValues = valuesForFilter(filters.author);
   const visibleWorks = authorValues.length === 1

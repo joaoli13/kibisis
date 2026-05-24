@@ -3,7 +3,7 @@ import { loadEnvConfig } from "@next/env";
 import { resolve } from "node:path";
 import { Pool, type PoolClient } from "pg";
 import { filterHasValue, normalizeSearchFilters, valuesForFilter } from "./filters";
-import type { FacetOption, MetadataFacets, NodeLevel, Passage, SearchFilters, SearchResult, SemanticNode } from "./types";
+import type { FacetOption, MetadataFacets, MetadataSummary, NodeLevel, Passage, SearchFilters, SearchResult, SemanticNode } from "./types";
 
 let pool: Pool | undefined;
 
@@ -602,6 +602,24 @@ export async function getMetadataFacets(filters: SearchFilters = {}, options: Me
     languages: markFacetOptions(rawFacets.languages, new Set(compatibilitySource.languages.map((option) => option.id)), normalizedFilters, "language"),
     textTypes: markFacetOptions(rawFacets.textTypes, new Set(compatibilitySource.textTypes.map((option) => option.id)), normalizedFilters, "textType")
   };
+}
+
+export async function getMetadataSummary(filters: SearchFilters = {}): Promise<MetadataSummary> {
+  const normalizedFilters = normalizeSearchFilters(filters);
+  const values: unknown[] = [];
+  const where = ["p.license_status = 'cc_compatible'"];
+  addPassageSqlFilters(where, values, normalizedFilters);
+  const result = await getPool().query<MetadataSummary>(`
+    SELECT
+      count(DISTINCT p.author_id)::int AS authors_count,
+      count(DISTINCT p.work_id)::int AS works_count,
+      count(*)::int AS passages_count
+    FROM published_passages p
+    JOIN authors a ON a.id = p.author_id
+    JOIN works w ON w.id = p.work_id
+    WHERE ${where.join(" AND ")}
+  `, values);
+  return result.rows[0] ?? { authors_count: 0, works_count: 0, passages_count: 0 };
 }
 
 export async function getNodes(level: NodeLevel = "author", filters: SearchFilters = {}): Promise<SemanticNode[]> {

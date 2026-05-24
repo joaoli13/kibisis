@@ -2,10 +2,12 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getMetadataFacetsMock = vi.fn();
+const getMetadataSummaryMock = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   dataSource: () => "postgres",
   getMetadataFacets: getMetadataFacetsMock,
+  getMetadataSummary: getMetadataSummaryMock,
   isDatabaseConfigurationError: () => false
 }));
 
@@ -24,6 +26,12 @@ describe("metadata route dashboard facets", () => {
       languages: [],
       textTypes: []
     });
+    getMetadataSummaryMock.mockReset();
+    getMetadataSummaryMock.mockResolvedValue({
+      authors_count: 159,
+      works_count: 1173,
+      passages_count: 27536
+    });
   });
 
   it("normalizes repeated filters and passes dashboard options", async () => {
@@ -37,9 +45,28 @@ describe("metadata route dashboard facets", () => {
 
     expect(response.status).toBe(200);
     expect(payload.facets.genres[0]).toMatchObject({ id: "tragedy", selected: true, compatible: true });
+    expect(payload.summary).toEqual({ authors_count: 159, works_count: 1173, passages_count: 27536 });
     expect(getMetadataFacetsMock).toHaveBeenCalledWith(
       { genre: ["tragedy", "history"] },
       { dashboard: true, scope: "corpus", facet: "authors", facetQuery: "plat", limit: 20 }
     );
+    expect(getMetadataSummaryMock).toHaveBeenCalledWith({ genre: ["tragedy", "history"] });
+  });
+
+  it("returns filtered and total summaries when requested", async () => {
+    const { GET } = await import("./route");
+    getMetadataSummaryMock
+      .mockResolvedValueOnce({ authors_count: 3, works_count: 6, passages_count: 340 })
+      .mockResolvedValueOnce({ authors_count: 159, works_count: 1173, passages_count: 27536 });
+    const request = new NextRequest("http://localhost/api/metadata?summary=true&totalSummary=true&author=Homer");
+
+    const response = await GET(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.summary).toEqual({ authors_count: 3, works_count: 6, passages_count: 340 });
+    expect(payload.totalSummary).toEqual({ authors_count: 159, works_count: 1173, passages_count: 27536 });
+    expect(getMetadataSummaryMock).toHaveBeenNthCalledWith(1, { author: "Homer" });
+    expect(getMetadataSummaryMock).toHaveBeenNthCalledWith(2, {});
   });
 });

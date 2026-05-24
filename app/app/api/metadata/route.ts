@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dataSource, getMetadataFacets, isDatabaseConfigurationError } from "@/lib/db";
+import { dataSource, getMetadataFacets, getMetadataSummary, isDatabaseConfigurationError } from "@/lib/db";
 import { readFiltersFromSearchParams } from "@/lib/filters";
 import { withProvenance } from "@/lib/provenance";
 
@@ -7,14 +7,26 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const facet = url.searchParams.get("facet") ?? undefined;
-    const facets = await getMetadataFacets(readFiltersFromSearchParams(url.searchParams), {
-      dashboard: url.searchParams.get("dashboard") === "true",
-      scope: url.searchParams.get("scope") === "corpus" ? "corpus" : "compatible",
-      facet: facet === "author" ? "authors" : facet === "work" ? "works" : facet === "genre" ? "genres" : facet === "period" ? "periods" : facet === "language" ? "languages" : facet === "textType" ? "textTypes" : undefined,
-      facetQuery: url.searchParams.get("facetQuery") ?? undefined,
-      limit: Number(url.searchParams.get("limit") ?? "20")
-    });
-    return NextResponse.json(withProvenance({ facets }), {
+    const filters = readFiltersFromSearchParams(url.searchParams);
+    const dashboard = url.searchParams.get("dashboard") === "true";
+    const includeSummary = dashboard || url.searchParams.get("summary") === "true";
+    const includeTotalSummary = includeSummary && url.searchParams.get("totalSummary") === "true";
+    const [facets, summary, totalSummary] = await Promise.all([
+      getMetadataFacets(filters, {
+        dashboard,
+        scope: url.searchParams.get("scope") === "corpus" ? "corpus" : "compatible",
+        facet: facet === "author" ? "authors" : facet === "work" ? "works" : facet === "genre" ? "genres" : facet === "period" ? "periods" : facet === "language" ? "languages" : facet === "textType" ? "textTypes" : undefined,
+        facetQuery: url.searchParams.get("facetQuery") ?? undefined,
+        limit: Number(url.searchParams.get("limit") ?? "20")
+      }),
+      includeSummary ? getMetadataSummary(filters) : Promise.resolve(undefined),
+      includeTotalSummary ? getMetadataSummary({}) : Promise.resolve(undefined)
+    ]);
+    return NextResponse.json(withProvenance({
+      facets,
+      ...(summary ? { summary } : {}),
+      ...(totalSummary ? { totalSummary } : {})
+    }), {
       headers: { "x-perseus-data-source": dataSource() }
     });
   } catch (error) {

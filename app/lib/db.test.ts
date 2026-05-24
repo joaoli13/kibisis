@@ -3,6 +3,7 @@ import {
   dataSource,
   englishTranslationSearchFilters,
   getMetadataFacets,
+  getMetadataSummary,
   getNodes,
   getPassage,
   searchPassages,
@@ -53,6 +54,7 @@ describe("postgres data source", () => {
       await expect(searchPassages("hospitality", {}, 5)).rejects.toThrow("DATABASE_URL is not configured");
       await expect(getNodes("author", {})).rejects.toThrow("DATABASE_URL is not configured");
       await expect(getMetadataFacets()).rejects.toThrow("DATABASE_URL is not configured");
+      await expect(getMetadataSummary()).rejects.toThrow("DATABASE_URL is not configured");
       await expect(getPassage("passage:missing")).rejects.toThrow("DATABASE_URL is not configured");
     });
   });

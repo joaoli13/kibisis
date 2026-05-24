@@ -75,6 +75,17 @@ export type MetadataFacets = {
   textTypes: FacetOption[];
 };
 
+export type MetadataSummary = {
+  authors_count: number;
+  works_count: number;
+  passages_count: number;
+};
+
+export type MetadataSummaryPair = {
+  summary: MetadataSummary;
+  totalSummary: MetadataSummary;
+};
+
 export type Provenance = {
   source: string;
   source_url: string;

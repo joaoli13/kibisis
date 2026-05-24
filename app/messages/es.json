@@ -98,6 +98,8 @@
   },
   "resultsPanel": {
     "results": "Resultados",
+    "authors": "autores",
+    "works": "obras",
     "passages": "pasajes",
     "inContext": "en contexto",
     "copyContextJson": "Copiar contexto JSON",
@@ -217,6 +219,7 @@
     "workSearch": "Buscar obra",
     "clearDimension": "Limpiar dimensión",
     "summary": "Resumen del borrador",
+    "authors": "autores",
     "works": "obras",
     "tooltip": "Aplicar confirma el borrador en la pantalla principal. Cancelar descarta los cambios hechos aqui.",
     "mapHelp": "El mapa conserva la jerarquia autor, obra y pasaje. Sigue respetando la carga ligera: autores por defecto, obras cuando hay autor, y pasajes solo con alcance."

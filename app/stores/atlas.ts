@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { NodeLevel, Passage, SearchFilters, SearchResult, SemanticNode } from "@/lib/types";
+import type { MetadataSummary, NodeLevel, Passage, SearchFilters, SearchResult, SemanticNode } from "@/lib/types";
 
 export type AnswerSource = {
   n: number;
@@ -17,6 +17,8 @@ type AtlasState = {
   answerQuestion: string;
   answerSources: AnswerSource[];
   results: SearchResult[];
+  metadataSummary: MetadataSummary | null;
+  metadataTotalSummary: MetadataSummary | null;
   nodes: SemanticNode[];
   selectedPassageId: string | null;
   colorBy: "cluster" | "author" | "genre" | "period";
@@ -34,6 +36,7 @@ type AtlasState = {
   setAnswerSources: (answerSources: AnswerSource[]) => void;
   setFilters: (filters: SearchFilters) => void;
   setResults: (results: SearchResult[]) => void;
+  setMetadataSummary: (summary: MetadataSummary | null, totalSummary: MetadataSummary | null) => void;
   setNodes: (nodes: SemanticNode[]) => void;
   selectPassage: (id: string | null) => void;
   setColorBy: (colorBy: AtlasState["colorBy"]) => void;
@@ -54,6 +57,8 @@ export const useAtlasStore = create<AtlasState>((set) => ({
   answerQuestion: "",
   answerSources: [],
   results: [],
+  metadataSummary: null,
+  metadataTotalSummary: null,
   nodes: [],
   selectedPassageId: null,
   colorBy: "cluster",
@@ -71,6 +76,7 @@ export const useAtlasStore = create<AtlasState>((set) => ({
   setAnswerSources: (answerSources) => set({ answerSources }),
   setFilters: (filters) => set({ filters }),
   setResults: (results) => set({ results }),
+  setMetadataSummary: (metadataSummary, metadataTotalSummary) => set({ metadataSummary, metadataTotalSummary }),
   setNodes: (nodes) => set({ nodes }),
   selectPassage: (id) => set({ selectedPassageId: id }),
   setColorBy: (colorBy) => set({ colorBy }),

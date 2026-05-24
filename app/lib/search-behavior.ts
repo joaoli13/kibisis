@@ -29,3 +29,14 @@ export function hasPassageNodeScope(
       options.overview === "sample"
   );
 }
+
+export function shouldAutoOpenPassageMap(
+  results: Array<{ author_id?: string | null; work_id?: string | null }>
+): boolean {
+  if (!results.length) {
+    return false;
+  }
+  const authorIds = new Set(results.map((result) => result.author_id).filter(Boolean));
+  const workIds = new Set(results.map((result) => result.work_id).filter(Boolean));
+  return authorIds.size === 1 && workIds.size === 1;
+}

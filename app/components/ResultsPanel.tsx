@@ -184,6 +184,8 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
   const sources = useAtlasStore((state) => state.answerSources);
   const answerError = useAtlasStore((state) => state.answerError);
   const results = useAtlasStore((state) => state.results);
+  const metadataSummary = useAtlasStore((state) => state.metadataSummary);
+  const metadataTotalSummary = useAtlasStore((state) => state.metadataTotalSummary);
   const selectedPassageId = useAtlasStore((state) => state.selectedPassageId);
   const setAnswerError = useAtlasStore((state) => state.setAnswerError);
   const setAnswerMarkdown = useAtlasStore((state) => state.setAnswerMarkdown);
@@ -205,12 +207,23 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
   const [detailExpanded, setDetailExpanded] = useState(false);
   const previousResultsRef = useRef(results);
   const selected = selectedFromResults ?? fetchedSelected;
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const contextPassages = useMemo(
     () => results.filter((passage) => contextPassageIds.has(passage.id)).slice(0, CONTEXT_LIMIT),
     [results, contextPassageIds]
   );
   const passageLabel = t("passages");
   const contextLabel = t("inContext");
+  const corpusScopeStats = useMemo(() => {
+    if (!metadataSummary || !metadataTotalSummary) {
+      return "";
+    }
+    return [
+      `${numberFormatter.format(metadataSummary.authors_count)}/${numberFormatter.format(metadataTotalSummary.authors_count)} ${t("authors")}`,
+      `${numberFormatter.format(metadataSummary.works_count)}/${numberFormatter.format(metadataTotalSummary.works_count)} ${t("works")}`,
+      `${numberFormatter.format(metadataSummary.passages_count)}/${numberFormatter.format(metadataTotalSummary.passages_count)} ${t("passages")}`
+    ].join(" · ");
+  }, [metadataSummary, metadataTotalSummary, numberFormatter, t]);
   const answerScopeSummary = useMemo(() => {
     const parts: string[] = [];
     if (query.trim()) {
@@ -518,7 +531,10 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
               {contextStatus ? <div className="mt-2 text-xs text-neutral-500">{contextStatus}</div> : null}
             </section>
             <SourceList framed={false} sources={sources} />
-            <p className="text-xs leading-5 text-neutral-500">{t("notice")}</p>
+            <div className="space-y-1 text-xs leading-5 text-neutral-500">
+              <p>{t("notice")}</p>
+              {corpusScopeStats ? <p>{corpusScopeStats}</p> : null}
+            </div>
           </aside>
         </div>
 
@@ -717,9 +733,10 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
         </div>
       </section>
 
-      <p className="p-4 text-xs leading-5 text-neutral-500">
-        {t("notice")}
-      </p>
+      <div className="space-y-1 p-4 text-xs leading-5 text-neutral-500">
+        <p>{t("notice")}</p>
+        {corpusScopeStats ? <p>{corpusScopeStats}</p> : null}
+      </div>
 
       {expanded ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-3 sm:p-6">

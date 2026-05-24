@@ -98,6 +98,8 @@
   },
   "resultsPanel": {
     "results": "Resultados",
+    "authors": "autores",
+    "works": "obras",
     "passages": "passagens",
     "inContext": "no contexto",
     "copyContextJson": "Copiar contexto JSON",
@@ -217,6 +219,7 @@
     "workSearch": "Buscar obra",
     "clearDimension": "Limpar dimensão",
     "summary": "Resumo do rascunho",
+    "authors": "autores",
     "works": "obras",
     "tooltip": "Aplicar confirma o rascunho na tela principal. Cancelar descarta as alterações feitas aqui.",
     "mapHelp": "O mapa preserva a hierarquia autor, obra e passagem. Ele continua respeitando as regras de carregamento leve: autores por padrão, obras quando houver autor, e trechos apenas com escopo."

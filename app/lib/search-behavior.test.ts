@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hasMetadataScope, hasPassageNodeScope, hasTextSearch } from "./search-behavior";
+import { hasMetadataScope, hasPassageNodeScope, hasTextSearch, shouldAutoOpenPassageMap } from "./search-behavior";
 
 describe("search behavior", () => {
   it("uses only non-empty text queries to populate the result set", () => {
@@ -20,5 +20,27 @@ describe("search behavior", () => {
     expect(hasPassageNodeScope("", { work: "Republic" })).toBe(true);
     expect(hasPassageNodeScope("", {}, { page: "1" })).toBe(true);
     expect(hasPassageNodeScope("", {}, { overview: "sample" })).toBe(true);
+  });
+
+  it("auto-opens passage map only when results come from one author and one work", () => {
+    expect(shouldAutoOpenPassageMap([])).toBe(false);
+    expect(
+      shouldAutoOpenPassageMap([
+        { author_id: "author:homer", work_id: "work:odyssey" },
+        { author_id: "author:homer", work_id: "work:odyssey" }
+      ])
+    ).toBe(true);
+    expect(
+      shouldAutoOpenPassageMap([
+        { author_id: "author:homer", work_id: "work:odyssey" },
+        { author_id: "author:homer", work_id: "work:iliad" }
+      ])
+    ).toBe(false);
+    expect(
+      shouldAutoOpenPassageMap([
+        { author_id: "author:homer", work_id: "work:odyssey" },
+        { author_id: "author:plato", work_id: "work:republic" }
+      ])
+    ).toBe(false);
   });
 });

@@ -98,6 +98,8 @@
   },
   "resultsPanel": {
     "results": "Results",
+    "authors": "authors",
+    "works": "works",
     "passages": "passages",
     "inContext": "in context",
     "copyContextJson": "Copy context JSON",
@@ -217,6 +219,7 @@
     "workSearch": "Search work",
     "clearDimension": "Clear dimension",
     "summary": "Draft summary",
+    "authors": "authors",
     "works": "works",
     "tooltip": "Apply commits the draft to the main screen. Cancel discards the changes made here.",
     "mapHelp": "The map preserves the author, work, and passage hierarchy. It still follows lightweight loading rules: authors by default, works when an author is scoped, and passages only with scope."
