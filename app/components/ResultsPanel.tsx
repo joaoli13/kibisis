@@ -132,6 +132,14 @@ function SourceList({ sources, framed = true }: { sources: Source[]; framed?: bo
   );
 }
 
+function citationNumbers(part: string): number[] | null {
+  const citation = /^\[\s*(\d+(?:\s*,\s*\d+)*)\s*\]$/.exec(part);
+  if (!citation) {
+    return null;
+  }
+  return citation[1].split(",").map((item) => Number(item.trim()));
+}
+
 function CitationText({
   className,
   markdown,
@@ -143,27 +151,51 @@ function CitationText({
   onCitation: (source: Source) => void;
   sources: Source[];
 }) {
-  const parts = markdown.split(/(\[\d+\])/g);
+  const parts = markdown.split(/(\[\s*\d+(?:\s*,\s*\d+)*\s*\])/g);
   return (
     <div className={className}>
       {parts.map((part, index) => {
-        const citation = /^\[(\d+)\]$/.exec(part);
-        if (!citation) {
+        const numbers = citationNumbers(part);
+        if (!numbers) {
           return <span key={`${part}-${index}`}>{part}</span>;
         }
-        const source = sources.find(({ n }) => n === Number(citation[1]));
-        if (!source) {
+        const citationSources = numbers.map((n) => sources.find((source) => source.n === n) ?? null);
+        if (!citationSources.some(Boolean)) {
           return <span key={`${part}-${index}`}>{part}</span>;
+        }
+        if (numbers.length === 1 && citationSources[0]) {
+          const source = citationSources[0];
+          return (
+            <button
+              className="mx-0.5 rounded border border-[var(--line)] px-1 text-[var(--accent)] hover:border-[var(--accent)]"
+              key={`${part}-${index}`}
+              onClick={() => onCitation(source)}
+              type="button"
+            >
+              {part}
+            </button>
+          );
         }
         return (
-          <button
-            className="mx-0.5 rounded border border-[var(--line)] px-1 text-[var(--accent)] hover:border-[var(--accent)]"
-            key={`${part}-${index}`}
-            onClick={() => onCitation(source)}
-            type="button"
-          >
-            {part}
-          </button>
+          <span className="mx-0.5 inline-flex items-baseline rounded border border-[var(--line)] px-1" key={`${part}-${index}`}>
+            <span>[</span>
+            {numbers.map((number, numberIndex) => {
+              const source = citationSources[numberIndex];
+              return (
+                <span key={`${part}-${index}-${number}`}>
+                  {numberIndex > 0 ? <span>, </span> : null}
+                  {source ? (
+                    <button className="text-[var(--accent)] hover:underline" onClick={() => onCitation(source)} type="button">
+                      {number}
+                    </button>
+                  ) : (
+                    <span>{number}</span>
+                  )}
+                </span>
+              );
+            })}
+            <span>]</span>
+          </span>
         );
       })}
     </div>
