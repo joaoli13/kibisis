@@ -1,24 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hashedIp } from "./logger";
 
-const buckets = new Map<string, { count: number; resetAt: number }>();
+type RateLimitRoute = "search" | "metadata" | "passage" | "synthesize";
+type RateLimitBucket = { count: number; resetAt: number };
+type RateLimitStore = {
+  get(key: string): RateLimitBucket | undefined;
+  set(key: string, bucket: RateLimitBucket): void;
+};
 
-export function limitForRoute(route: "search" | "passage" | "synthesize"): number {
+const buckets = new Map<string, RateLimitBucket>();
+let store: RateLimitStore = buckets;
+
+export function setRateLimitStoreForTests(nextStore: RateLimitStore) {
+  store = nextStore;
+}
+
+export function resetRateLimitStoreForTests() {
+  buckets.clear();
+  store = buckets;
+}
+
+export function limitForRoute(route: RateLimitRoute): number {
   const envName = `RATE_LIMIT_${route.toUpperCase()}_PER_MINUTE`;
   const configured = Number(process.env[envName]);
   if (Number.isFinite(configured) && configured > 0) {
     return configured;
   }
-  return route === "search" ? 60 : route === "passage" ? 120 : 10;
+  return route === "search" ? 60 : route === "metadata" ? 60 : route === "passage" ? 120 : 5;
 }
 
-export function rateLimit(request: NextRequest, route: "search" | "passage" | "synthesize"): NextResponse | null {
+export function rateLimit(request: NextRequest, route: RateLimitRoute): NextResponse | null {
   const now = Date.now();
   const key = `${route}:${hashedIp(request)}`;
-  const bucket = buckets.get(key);
+  const bucket = store.get(key);
   const limit = limitForRoute(route);
   if (!bucket || bucket.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + 60_000 });
+    store.set(key, { count: 1, resetAt: now + 60_000 });
     return null;
   }
   if (bucket.count >= limit) {
@@ -28,6 +45,6 @@ export function rateLimit(request: NextRequest, route: "search" | "passage" | "s
     );
   }
   bucket.count += 1;
+  store.set(key, bucket);
   return null;
 }
-

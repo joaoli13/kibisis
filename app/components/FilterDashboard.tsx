@@ -11,6 +11,7 @@ import {
   toggleFilterValue,
   valuesForFilter
 } from "@/lib/filters";
+import { countCodePoints, FACET_QUERY_MAX_CODE_POINTS } from "@/lib/input-limits";
 import type { FacetOption, MetadataFacets, MetadataSummary, SearchFilters } from "@/lib/types";
 
 type MetadataResponse = {
@@ -77,10 +78,18 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
   const [busy, setBusy] = useState(false);
   const [view, setView] = useState<"filters" | "map">("filters");
   const numberFormatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+  const authorQueryLength = countCodePoints(authorQuery.trim());
+  const workQueryLength = countCodePoints(workQuery.trim());
+  const authorQueryTooLong = authorQueryLength > FACET_QUERY_MAX_CODE_POINTS;
+  const workQueryTooLong = workQueryLength > FACET_QUERY_MAX_CODE_POINTS;
 
   useEffect(() => {
     let cancelled = false;
     const handle = window.setTimeout(async () => {
+      if (authorQueryTooLong || workQueryTooLong) {
+        setBusy(false);
+        return;
+      }
       setBusy(true);
       const params = new URLSearchParams({ dashboard: "true", scope, limit: "20" });
       appendFiltersToParams(params, draft);
@@ -112,7 +121,7 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
       cancelled = true;
       window.clearTimeout(handle);
     };
-  }, [authorQuery, draft, scope, workQuery]);
+  }, [authorQuery, authorQueryTooLong, draft, scope, workQuery, workQueryTooLong]);
 
   const selectedItems = useMemo(
     () =>
@@ -154,20 +163,36 @@ export function FilterDashboard({ facets, filters, onApply, onClose, translateOp
           ) : null}
         </div>
         {key === "author" ? (
-          <input
-            className="mb-3 w-full border border-[var(--line)] bg-white px-2 py-2 text-sm"
-            onChange={(event) => setAuthorQuery(event.target.value)}
-            placeholder={t("filterDashboard.authorSearch")}
-            value={authorQuery}
-          />
+          <>
+            <input
+              aria-invalid={authorQueryTooLong}
+              className="w-full border border-[var(--line)] bg-white px-2 py-2 text-sm aria-[invalid=true]:border-red-500"
+              onChange={(event) => setAuthorQuery(event.target.value)}
+              placeholder={t("filterDashboard.authorSearch")}
+              value={authorQuery}
+            />
+            <div className={`mb-3 mt-1 text-xs ${authorQueryTooLong ? "text-red-700" : "text-neutral-500"}`}>
+              {authorQueryTooLong
+                ? t("filterDashboard.facetLimitExceeded", { count: authorQueryLength, limit: FACET_QUERY_MAX_CODE_POINTS })
+                : t("filterDashboard.facetLimitCounter", { count: authorQueryLength, limit: FACET_QUERY_MAX_CODE_POINTS })}
+            </div>
+          </>
         ) : null}
         {key === "work" ? (
-          <input
-            className="mb-3 w-full border border-[var(--line)] bg-white px-2 py-2 text-sm"
-            onChange={(event) => setWorkQuery(event.target.value)}
-            placeholder={t("filterDashboard.workSearch")}
-            value={workQuery}
-          />
+          <>
+            <input
+              aria-invalid={workQueryTooLong}
+              className="w-full border border-[var(--line)] bg-white px-2 py-2 text-sm aria-[invalid=true]:border-red-500"
+              onChange={(event) => setWorkQuery(event.target.value)}
+              placeholder={t("filterDashboard.workSearch")}
+              value={workQuery}
+            />
+            <div className={`mb-3 mt-1 text-xs ${workQueryTooLong ? "text-red-700" : "text-neutral-500"}`}>
+              {workQueryTooLong
+                ? t("filterDashboard.facetLimitExceeded", { count: workQueryLength, limit: FACET_QUERY_MAX_CODE_POINTS })
+                : t("filterDashboard.facetLimitCounter", { count: workQueryLength, limit: FACET_QUERY_MAX_CODE_POINTS })}
+            </div>
+          </>
         ) : null}
         {renderOptions(key, dashboardFacets[facetsKey], visual)}
       </section>

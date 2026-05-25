@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAtlasStore } from "@/stores/atlas";
 import { appendFiltersToParams } from "@/lib/filters";
+import { countCodePoints, FREE_TEXT_MAX_CODE_POINTS } from "@/lib/input-limits";
 import { hasPassageNodeScope, hasTextSearch, shouldAutoOpenPassageMap } from "@/lib/search-behavior";
 import type { SearchResult, SemanticNode } from "@/lib/types";
 
@@ -34,7 +35,9 @@ export function SearchBar() {
     [t]
   );
   const hasActiveSearch = useMemo(() => hasTextSearch(activeQuery), [activeQuery]);
-  const canSubmitSearch = hasTextSearch(query);
+  const queryLength = countCodePoints(query.trim());
+  const queryTooLong = queryLength > FREE_TEXT_MAX_CODE_POINTS;
+  const canSubmitSearch = hasTextSearch(query) && !queryTooLong;
 
   useEffect(() => {
     let cancelled = false;
@@ -104,12 +107,20 @@ export function SearchBar() {
     <section className="col-span-full border-b border-[var(--line)] bg-[var(--surface-muted)] px-4 py-3">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
         <form className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center" onSubmit={submitSearch}>
-          <input
-            className="h-10 min-w-0 flex-1 border border-[var(--line)] bg-white px-3 text-sm"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("retrievalPlaceholder")}
-            value={query}
-          />
+          <div className="min-w-0 flex-1">
+            <input
+              aria-invalid={queryTooLong}
+              className="h-10 w-full border border-[var(--line)] bg-white px-3 text-sm aria-[invalid=true]:border-red-500"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("retrievalPlaceholder")}
+              value={query}
+            />
+            <div className={`mt-1 text-xs ${queryTooLong ? "text-red-700" : "text-neutral-500"}`}>
+              {queryTooLong
+                ? t("limitExceeded", { count: queryLength, limit: FREE_TEXT_MAX_CODE_POINTS })
+                : t("limitCounter", { count: queryLength, limit: FREE_TEXT_MAX_CODE_POINTS })}
+            </div>
+          </div>
           <button
             className="h-10 w-full border border-[var(--accent)] bg-[var(--accent)] px-4 text-sm font-semibold text-white disabled:opacity-50 sm:w-auto"
             disabled={busy || !canSubmitSearch}

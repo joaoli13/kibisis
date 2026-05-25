@@ -100,4 +100,27 @@ describe("metadata route dashboard facets", () => {
     expect(getMetadataSummaryMock).toHaveBeenNthCalledWith(1, { author: "Homer" });
     expect(getMetadataSummaryMock).toHaveBeenNthCalledWith(2, {});
   });
+
+  it("rejects overlong facet queries before aggregation work", async () => {
+    const { GET } = await import("./route");
+    const request = new NextRequest(`http://localhost/api/metadata?dashboard=true&authorQuery=${"a".repeat(101)}`);
+
+    const response = await GET(request);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "input_too_long", field: "authorQuery", limit: 100 });
+    expect(getMetadataFacetsMock).not.toHaveBeenCalled();
+    expect(getMetadataSummaryMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid metadata limits before aggregation work", async () => {
+    const { GET } = await import("./route");
+    const request = new NextRequest("http://localhost/api/metadata?dashboard=true&limit=-1");
+
+    const response = await GET(request);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "invalid_limit", field: "limit" });
+    expect(getMetadataFacetsMock).not.toHaveBeenCalled();
+  });
 });

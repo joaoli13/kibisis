@@ -1,21 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dataSource, getPassage, isDatabaseConfigurationError } from "@/lib/db";
+import { validateId, type ValidationFailure } from "@/lib/input-limits";
 import { logRequest } from "@/lib/logger";
 import { withProvenance } from "@/lib/provenance";
 import { rateLimit } from "@/lib/rate-limit";
 
+function validationResponse(error: ValidationFailure) {
+  return NextResponse.json(error, { status: error.status });
+}
+
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const started = Date.now();
+  let statusCode = 200;
+  let errorCode: string | undefined;
   const limited = rateLimit(request, "passage");
   if (limited) {
+    statusCode = 429;
+    errorCode = "rate_limited";
+    logRequest({ request, route: "/api/passage/[id]", statusCode, latencyMs: Date.now() - started, errorCode, dataSource: dataSource() });
     return limited;
   }
-  const started = Date.now();
   const { id } = await context.params;
-  let statusCode = 200;
   try {
+    const validationError = validateId(id, "id");
+    if (validationError) {
+      statusCode = validationError.status;
+      errorCode = validationError.error;
+      return validationResponse(validationError);
+    }
     const passage = await getPassage(id);
     if (!passage) {
       statusCode = 404;
+      errorCode = "not_found";
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
     return NextResponse.json(withProvenance({ passage }), {
@@ -23,6 +39,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     });
   } catch (error) {
     statusCode = isDatabaseConfigurationError(error) ? 503 : 500;
+    errorCode = isDatabaseConfigurationError(error) ? "database_not_configured" : "passage_failed";
     return NextResponse.json(
       { error: isDatabaseConfigurationError(error) ? "database_not_configured" : "passage_failed" },
       { status: statusCode }
@@ -33,7 +50,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       route: "/api/passage/[id]",
       statusCode,
       latencyMs: Date.now() - started,
-      passageId: id,
+      inputLength: id.length,
+      errorCode,
       dataSource: dataSource()
     });
   }

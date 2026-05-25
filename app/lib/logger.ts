@@ -13,7 +13,9 @@ export function logRequest(fields: {
   statusCode: number;
   latencyMs: number;
   queryLength?: number;
-  passageId?: string;
+  inputLength?: number;
+  requestBytes?: number;
+  errorCode?: string;
   dataSource: string;
 }) {
   console.log(
@@ -22,11 +24,12 @@ export function logRequest(fields: {
       route: fields.route,
       ip: hashedIp(fields.request),
       query_length: fields.queryLength,
-      passage_id: fields.passageId,
+      input_length: fields.inputLength,
+      request_bytes: fields.requestBytes,
+      error_code: fields.errorCode,
       latency_ms: fields.latencyMs,
       status_code: fields.statusCode,
       data_source: fields.dataSource
     })
   );
 }
-

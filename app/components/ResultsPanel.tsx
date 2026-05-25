@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { valuesForFilter } from "@/lib/filters";
+import { countCodePoints, FREE_TEXT_MAX_CODE_POINTS } from "@/lib/input-limits";
 import { useAtlasStore } from "@/stores/atlas";
 import type { Passage, SearchFilters } from "@/lib/types";
 
@@ -214,6 +215,10 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
   );
   const passageLabel = t("passages");
   const contextLabel = t("inContext");
+  const effectiveAnswerQuestion = answerQuestion.trim() || query;
+  const answerQuestionLength = countCodePoints(effectiveAnswerQuestion.trim());
+  const answerQuestionTooLong = answerQuestionLength > FREE_TEXT_MAX_CODE_POINTS;
+  const canGenerateAnswer = !busy && contextPassages.length > 0 && !answerQuestionTooLong;
   const corpusScopeStats = useMemo(() => {
     if (!metadataTotalSummary) {
       return "";
@@ -361,9 +366,15 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
   }, [detailExpanded, selectedFromResults, selectedPassageId]);
 
   async function generateAnswer() {
+    if (!canGenerateAnswer) {
+      if (answerQuestionTooLong) {
+        setAnswerError(t("tooLongError"));
+      }
+      return;
+    }
     setBusy(true);
     setAnswerError("");
-    const effectiveQuestion = answerQuestion.trim() || query;
+    const effectiveQuestion = effectiveAnswerQuestion.trim();
     try {
       const response = await fetch("/api/synthesize", {
         method: "POST",
@@ -387,7 +398,18 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
     } catch (error) {
       setAnswerMarkdown("");
       setAnswerSources([]);
-      setAnswerError(t("answerError"));
+      const errorCode = error instanceof Error ? error.message : "";
+      setAnswerError(
+        errorCode === "input_too_long"
+          ? t("tooLongError")
+          : errorCode === "request_too_large"
+            ? t("requestTooLargeError")
+            : errorCode === "rate_limited"
+              ? t("rateLimitedError")
+              : errorCode === "invalid_body" || errorCode === "invalid_json" || errorCode === "invalid_id" || errorCode === "too_many_passages"
+                ? t("invalidRequestError")
+                : t("answerError")
+      );
     } finally {
       setBusy(false);
     }
@@ -503,12 +525,18 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
                 </span>
                 <textarea
                   className="min-h-24 w-full border border-[var(--line)] bg-white px-3 py-2 text-sm leading-5"
+                  aria-invalid={answerQuestionTooLong}
                   onChange={(event) => setAnswerQuestion(event.target.value)}
                   placeholder={t("answerQuestionPlaceholder")}
                   title={t("answerQuestionTooltip")}
                   value={answerQuestion}
                 />
               </label>
+              <div className={`mt-1 text-xs ${answerQuestionTooLong ? "text-red-700" : "text-neutral-500"}`}>
+                {answerQuestionTooLong
+                  ? t("questionLimitExceeded", { count: answerQuestionLength, limit: FREE_TEXT_MAX_CODE_POINTS })
+                  : t("questionLimitCounter", { count: answerQuestionLength, limit: FREE_TEXT_MAX_CODE_POINTS })}
+              </div>
               {query.trim() ? (
                 <button
                   className="mt-2 text-xs font-semibold text-[var(--accent)] hover:underline"
@@ -537,7 +565,7 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
                 </button>
                 <button
                   className="border border-[var(--accent)] bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
-                  disabled={busy || contextPassages.length < 1}
+                  disabled={!canGenerateAnswer}
                   onClick={generateAnswer}
                   type="button"
                 >
@@ -626,7 +654,7 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
             </button>
             <button
               className="border border-[var(--accent)] bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
-              disabled={busy || contextPassages.length < 1}
+              disabled={!canGenerateAnswer}
               onClick={generateAnswer}
               type="button"
             >
@@ -639,12 +667,18 @@ export function ResultsPanel({ variant = "panel" }: ResultsPanelProps) {
             </span>
             <textarea
               className="min-h-20 w-full border border-[var(--line)] px-3 py-2 text-sm leading-5"
+              aria-invalid={answerQuestionTooLong}
               onChange={(event) => setAnswerQuestion(event.target.value)}
               placeholder={t("answerQuestionPlaceholder")}
               title={t("answerQuestionTooltip")}
               value={answerQuestion}
             />
           </label>
+          <div className={`text-xs ${answerQuestionTooLong ? "text-red-700" : "text-neutral-500"}`}>
+            {answerQuestionTooLong
+              ? t("questionLimitExceeded", { count: answerQuestionLength, limit: FREE_TEXT_MAX_CODE_POINTS })
+              : t("questionLimitCounter", { count: answerQuestionLength, limit: FREE_TEXT_MAX_CODE_POINTS })}
+          </div>
           {query.trim() ? (
             <button
               className="text-xs font-semibold text-[var(--accent)] hover:underline"
