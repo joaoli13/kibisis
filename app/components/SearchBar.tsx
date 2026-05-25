@@ -17,10 +17,12 @@ export function SearchBar() {
   const t = useTranslations("search");
   const query = useAtlasStore((state) => state.query);
   const activeQuery = useAtlasStore((state) => state.activeQuery);
+  const answerQuestion = useAtlasStore((state) => state.answerQuestion);
   const filters = useAtlasStore((state) => state.filters);
   const granularity = useAtlasStore((state) => state.granularity);
   const setQuery = useAtlasStore((state) => state.setQuery);
   const setActiveQuery = useAtlasStore((state) => state.setActiveQuery);
+  const setAnswerQuestion = useAtlasStore((state) => state.setAnswerQuestion);
   const setResults = useAtlasStore((state) => state.setResults);
   const setNodes = useAtlasStore((state) => state.setNodes);
   const setGranularity = useAtlasStore((state) => state.setGranularity);
@@ -99,7 +101,11 @@ export function SearchBar() {
     }
     setBusy(true);
     setPassageScopePrompt(false);
-    setActiveQuery(query);
+    const nextQuery = query.trim();
+    if (!answerQuestion.trim()) {
+      setAnswerQuestion(nextQuery);
+    }
+    setActiveQuery(nextQuery);
     setSearchRequestId((current) => current + 1);
   }
 
